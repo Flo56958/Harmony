@@ -17,8 +17,7 @@ namespace Harmony {
         private static IntPtr SetHook(LowLevelMouseProc proc) {
             using (var curProcess = Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule) {
-                return SetWindowsHookEx(WH_MOUSE_LL, proc,
-                  GetModuleHandle(curModule.ModuleName), 0);
+                return SetWindowsHookEx(WH_MOUSE_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
             }
         }
 
@@ -28,44 +27,38 @@ namespace Harmony {
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
             if (nCode < 0) return CallNextHookEx(_hookId, nCode, wParam, lParam);
-            var hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
+            var hookStruct = (Msllhookstruct)Marshal.PtrToStructure(lParam, typeof(Msllhookstruct));
 
-            var package = new MousePackage
+            var packet = new HarmonyPacket.MousePacket
             {
-                PosX = hookStruct.pt.X, PosY = hookStruct.pt.Y, MouseData = hookStruct.mouseData, Action = (MouseActionType)wParam
+                PosX = hookStruct.pt.X, 
+                PosY = hookStruct.pt.Y, 
+                MouseData = hookStruct.mouseData,
+                Action = wParam.ToInt32(),
+                Flags = hookStruct.flags,
+                DwExtraInfo = hookStruct.dwExtraInfo,
+                Time = hookStruct.time
             };
 
-            NetworkCommunicator.instance.SendAsync(package);
+            var nc = NetworkCommunicator.Instance;
+
+            if (nc != null) nc.SendAsync((HarmonyPacket.PacketType.MousePacket, packet));
             return CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct POINT {
-            public int X;
-            public int Y;
-
-            public POINT(int x, int y) {
-                this.X = x;
-                this.Y = y;
-            }
-
-            public static implicit operator System.Drawing.Point(POINT p) {
-                return new System.Drawing.Point(p.X, p.Y);
-            }
-
-            public static implicit operator POINT(System.Drawing.Point p) {
-                return new POINT(p.X, p.Y);
-            }
+        public struct Msllhookstruct
+        {
+            public System.Drawing.Point pt;
+            public uint mouseData;
+            public uint flags;
+            public uint time;
+            public IntPtr dwExtraInfo;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MSLLHOOKSTRUCT //Für passives Abfragen der Mausbewegung
-        {
-            public readonly POINT pt;
-            public readonly uint mouseData;
-            private readonly uint flags;
-            private readonly uint time;
-            private readonly IntPtr dwExtraInfo;
+        public struct MouseInput {
+            public uint DwType;
+            public Msllhookstruct Mstruct;
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]

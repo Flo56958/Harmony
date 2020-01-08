@@ -1,58 +1,116 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 
 namespace Harmony {
     public class NetworkCommunicator {
-        public static NetworkCommunicator instance;
-        private readonly StreamWriter sender;
-        private readonly BlockingCollection<MousePackage> blockingCollection;
-        private readonly Thread packer;
+        public static NetworkCommunicator Instance;
+        private StreamWriter _tx;
+        private StreamReader _rx;
+        private readonly BlockingCollection<(HarmonyPacket.PacketType, object)> _blockingCollection;
 
-        public NetworkCommunicator(string address, int port) {
-            instance = this;
-            var client = new TcpClient(address, port);
+        private readonly string address;
+        private readonly int port;
 
-            sender = new StreamWriter(client.GetStream()) { AutoFlush = true };
+        private readonly Thread _communicationThread;
 
-            blockingCollection = new BlockingCollection<MousePackage>();
+        public NetworkCommunicator(string address, int port, bool isMaster) {
+            if (Instance != null) return;
+            this.address = address;
+            this.port = port;
+            _communicationThread = isMaster ? new Thread(new ThreadStart(PackAndSend)) : new Thread(new ThreadStart(ListenAndUnpack));
 
-            packer = new Thread(new ThreadStart(PackAndSend));
-            packer.Start();
+            _blockingCollection = new BlockingCollection<(HarmonyPacket.PacketType, object)>();
+            _communicationThread.Start();
+            Instance = this;
+            MainWindow.debug.Text += "\nSuccessfully connected!";
         }
 
-        public void SendAsync(MousePackage o) {
-            blockingCollection.Add(o);
+        public void SendAsync((HarmonyPacket.PacketType, object) p) {
+            _blockingCollection.Add(p);
         }
 
-        public void close() {
-            packer.Abort();
-            sender.Close();
+        public void Close() {
+            _communicationThread.Abort();
+            if (_rx == null) {
+                _tx.Close();
+            }
+            else {
+                _rx.Close();
+            }
         }
 
         private void PackAndSend() {
+            var tcpOut = new TcpClient(address, port);
+
+            _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
+            Debug.WriteLine("Connected!");
             while (true) {
-                var mp = blockingCollection.Take();
-                sender.WriteLine(JsonConvert.SerializeObject(mp));
+                var o = _blockingCollection.Take();
+                HarmonyPacket hp = new HarmonyPacket() {Type = o.Item1};
+                switch (o.Item1) {
+                    case HarmonyPacket.PacketType.MousePacket:
+                        hp.Packet = JsonConvert.SerializeObject((HarmonyPacket.MousePacket) o.Item2);
+                        break;
+                }
+                _tx.WriteLine(JsonConvert.SerializeObject(hp));
             }
         }
-    }
 
-    public struct MousePackage {
-        public int PosX;
-        public int PosY;
-        public MouseActionType Action;
-        public uint MouseData;
-    }
+        private void ListenAndUnpack() {
+            var tcpIn = new TcpListener(IPAddress.Any, port);
+            tcpIn.Start();
+            var tcpInClient = tcpIn.AcceptTcpClient();
 
-    public enum MouseActionType {
-        WM_LBUTTONDOWN = 0x0201,
-        WM_LBUTTONUP = 0x0202,
-        WM_MOUSEMOVE = 0x0200,
-        WM_MOUSEWHEEL = 0x020A,
-        WM_RBUTTONDOWN = 0x0204,
-        WM_RBUTTONUP = 0x0205
+            _rx = new StreamReader(tcpInClient.GetStream(), Encoding.UTF8);
+            while (true) {
+                var line = _rx.ReadLine();
+                Console.WriteLine(line);
+
+                var packet = JsonConvert.DeserializeObject<HarmonyPacket>(line);
+                if (packet == null) continue;
+
+                switch (packet.Type) {
+                    case HarmonyPacket.PacketType.MousePacket:
+                        var mp = JsonConvert.DeserializeObject<HarmonyPacket.MousePacket>(packet.Packet);
+
+                        var input = new MouseHook.MouseInput()
+                        {
+                            DwType = 1, Mstruct = new MouseHook.Msllhookstruct()
+                            {
+                                pt = new Point(mp.PosX, mp.PosY), time = mp.Time, flags = mp.Flags, mouseData = mp.MouseData, dwExtraInfo = mp.DwExtraInfo
+                            }
+                        };
+
+                        if (mp.Action == 0x0200) {
+                            SetCursorPos(mp.PosX, mp.PosY); //Needs Elevation!!
+                            //mouse_event(0x8000, mp.PosX, mp.PosY, (int)mp.MouseData, mp.DwExtraInfo);
+                        } else {
+                            //mouse_event(mp.Action, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
+                        }
+                        //SendInput(0, input, Marshal.SizeOf(input));
+                        break;
+                }
+            }
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint SendInput(uint cInputs, MouseHook.MouseInput input, int size); //Does not work (currently)
+
+        [DllImport("user32.dll")]
+        private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo); //Does not work (currently)
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetCursorPos(int x, int y);
+
     }
 }

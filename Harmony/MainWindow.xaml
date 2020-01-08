@@ -7,6 +7,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <Button Name="StartButton" Content="Start" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120" Click="OnClickStart" ClickMode="Release"/>
+        <CheckBox Name="MasterCheckBox" Content="isMaster" HorizontalAlignment="Left" Margin="14,35,0,0" VerticalAlignment="Top"/>
+        <TextBox Name="IPInput" HorizontalAlignment="Left" Height="23" Margin="10,55,0,0" TextWrapping="Wrap" Text="localhost" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="PortInput" HorizontalAlignment="Left" Height="23" Margin="10,83,0,0" TextWrapping="Wrap" Text="55555" VerticalAlignment="Top" Width="120"/>
+        <TextBlock Name="Debug" HorizontalAlignment="Left" Margin="166,10,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="399" Width="616"/>
     </Grid>
 </Window>
