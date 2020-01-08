@@ -1,51 +1,45 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Harmony
 {
-    public static class MouseHook
-    {
-        public static event EventHandler MouseAction = delegate { };
-
-        public static void Start()
-        {
+    public static class MouseHook { 
+        public static void Start() {
             _hookID = SetHook(_proc);
         }
-        public static void stop()
-        {
+        public static void Stop() {
             UnhookWindowsHookEx(_hookID);
         }
 
         private static LowLevelMouseProc _proc = HookCallback;
         private static IntPtr _hookID = IntPtr.Zero;
 
-        private static IntPtr SetHook(LowLevelMouseProc proc)
-        {
+        private static IntPtr SetHook(LowLevelMouseProc proc) {
             using (Process curProcess = Process.GetCurrentProcess())
-            using (ProcessModule curModule = curProcess.MainModule)
-            {
+            using (ProcessModule curModule = curProcess.MainModule) {
                 return SetWindowsHookEx(WH_MOUSE_LL, proc,
                   GetModuleHandle(curModule.ModuleName), 0);
             }
         }
 
+        private const int WH_MOUSE_LL = 14;
+
         private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-        private static IntPtr HookCallback(
-          int nCode, IntPtr wParam, IntPtr lParam)
+        private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && MouseMessages.WM_LBUTTONDOWN == (MouseMessages)wParam)
-            {
+            Console.WriteLine(nCode + " " + wParam);
+            if (nCode >= 0) {
                 MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
-                MouseAction(null, new EventArgs());
+
+                MainWindow.com.SendAsync((wParam, hookStruct));
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
 
-        private const int WH_MOUSE_LL = 14;
-
-        private enum MouseMessages
+        private enum MouseMessage
         {
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
@@ -56,14 +50,26 @@ namespace Harmony
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
-        {
-            public int x;
-            public int y;
+        public struct POINT {
+            public int X;
+            public int Y;
+
+            public POINT(int x, int y) {
+                this.X = x;
+                this.Y = y;
+            }
+
+            public static implicit operator System.Drawing.Point(POINT p) {
+                return new System.Drawing.Point(p.X, p.Y);
+            }
+
+            public static implicit operator POINT(System.Drawing.Point p) {
+                return new POINT(p.X, p.Y);
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct MSLLHOOKSTRUCT
+        private struct MSLLHOOKSTRUCT //Für passives Abfragen der Mausbewegung
         {
             public POINT pt;
             public uint mouseData;
