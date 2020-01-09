@@ -4,9 +4,14 @@ using System.Runtime.InteropServices;
 
 namespace Harmony {
     public static class MouseHook {
+
+        private const int WH_MOUSE_LL = 14;
+        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+
         public static void Start() {
             _hookId = SetHook(Proc);
         }
+
         public static void Stop() {
             UnhookWindowsHookEx(_hookId);
         }
@@ -21,35 +26,29 @@ namespace Harmony {
             }
         }
 
-        private const int WH_MOUSE_LL = 14;
-
-        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
-
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
             if (nCode < 0) return CallNextHookEx(_hookId, nCode, wParam, lParam);
-            var hookStruct = (Msllhookstruct)Marshal.PtrToStructure(lParam, typeof(Msllhookstruct));
+            var hookStruct = (Msllhookstruct) Marshal.PtrToStructure(lParam, typeof(Msllhookstruct));
 
-            var packet = new HarmonyPacket.MousePacket
-            {
-                PosX = hookStruct.pt.X, 
-                PosY = hookStruct.pt.Y, 
-                MouseData = hookStruct.mouseData,
-                Action = wParam.ToInt32(),
-                Flags = hookStruct.flags,
-                DwExtraInfo = hookStruct.dwExtraInfo,
-                Time = hookStruct.time
-            };
-
-            var nc = NetworkCommunicator.Instance;
-
-            if (nc != null) nc.SendAsync((HarmonyPacket.PacketType.MousePacket, packet));
+            NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket() { 
+                Type = HarmonyPacket.PacketType.MousePacket, 
+                Pack = new HarmonyPacket.MousePacket {
+                    PosX = hookStruct.x,
+                    PosY = hookStruct.y,
+                    MouseData = hookStruct.mouseData,
+                    wParam = wParam.ToInt32(),
+                    Flags = hookStruct.flags,
+                    DwExtraInfo = hookStruct.dwExtraInfo.ToInt32(),
+                    Time = hookStruct.time
+                }
+            });
             return CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Msllhookstruct
-        {
-            public System.Drawing.Point pt;
+        public struct Msllhookstruct {
+            public int x;
+            public int y;
             public uint mouseData;
             public uint flags;
             public uint time;
@@ -73,6 +72,5 @@ namespace Harmony {
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
-
     }
 }

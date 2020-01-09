@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Windows.Forms;
 
 namespace Harmony {
     public class HarmonyPacket {
 
         public PacketType Type { get; set; }
-        public string PacketStr { get; set; }
+        public dynamic Pack { get; set; }
 
         public enum PacketType {
             MousePacket,
@@ -12,21 +13,24 @@ namespace Harmony {
             DisplayPacket
         }
 
-        public class Packet { 
+        public class MousePacket {
+            public int PosX { get; set; }
+            public int PosY { get; set; }
+            public int wParam { get; set; }
+            public uint MouseData { get; set; }
+            public uint Flags { get; set; }
+            public uint Time { get; set; }
+            public int DwExtraInfo { get; set; }
         }
 
-        public struct MousePacket {
-            public int PosX;
-            public int PosY;
-            public int Action;
-            public uint MouseData;
-            public uint Flags;
-            public uint Time;
-            public IntPtr DwExtraInfo;
+        public class DisplayPacket {
+            public System.Drawing.Rectangle[] screens { get; set; }
         }
 
-        public struct DisplayPacket {
-            public System.Drawing.Rectangle[] screens;
+        public class KeyboardPacket {
+            public Keys key { get; set; }
+            public int wParam { get; set; }
+            public int pressedKeys { get; set; } //first bit ctrl; second bit alt; third bit shift
         }
 
         public enum MouseActionType {

@@ -7,16 +7,15 @@ namespace Harmony {
     class KeyboardHook {
 
         private const int WH_KEYBOARD_LL = 13;
-        private const int WM_KEYDOWN = 0x0100;
         private static LowLevelKeyboardProc _proc = HookCallback;
-        private static IntPtr _hookID = IntPtr.Zero;
+        private static IntPtr _hookId = IntPtr.Zero;
 
         public static void Start() {
-            _hookID = SetHook(_proc);
+            _hookId = SetHook(_proc);
         }
 
         public void Stop() {
-            UnhookWindowsHookEx(_hookID);
+            UnhookWindowsHookEx(_hookId);
         }
 
         private static IntPtr SetHook(LowLevelKeyboardProc proc) {
@@ -30,12 +29,39 @@ namespace Harmony {
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
-            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN) {
-                int vkCode = Marshal.ReadInt32(lParam);
-                Console.WriteLine((Keys)vkCode);
-            }
 
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+            NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket()
+            {
+                Type = HarmonyPacket.PacketType.KeyBoardPacket, 
+                Pack = new HarmonyPacket.KeyboardPacket()
+                {
+                    wParam = wParam.ToInt32(), 
+                    key = (Keys)Marshal.ReadInt32(lParam),
+                    pressedKeys = 0
+                }
+            });
+
+            return CallNextHookEx(_hookId, nCode, wParam, lParam);
+        }
+
+        public struct KeyboardInput {
+            public int DwType;
+            public KEYBDINPUT Mstruct;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct KEYBDINPUT {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        public enum KeyEvent : int {
+            WM_KEYDOWN = 256,
+            WM_KEYUP = 257,
+            WM_SYSKEYUP = 261,
+            WM_SYSKEYDOWN = 260
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]

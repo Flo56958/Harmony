@@ -8,6 +8,9 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Windows.Data;
+using System.Windows.Forms;
+using System.Windows.Input;
 using Newtonsoft.Json;
 
 namespace Harmony {
@@ -15,7 +18,7 @@ namespace Harmony {
         public static NetworkCommunicator Instance;
         private StreamWriter _tx;
         private StreamReader _rx;
-        private readonly BlockingCollection<(HarmonyPacket.PacketType, object)> _blockingCollection;
+        private readonly BlockingCollection<HarmonyPacket> _blockingCollection;
 
         private readonly string address;
         private readonly int port;
@@ -28,13 +31,12 @@ namespace Harmony {
             this.port = port;
             _communicationThread = isMaster ? new Thread(new ThreadStart(PackAndSend)) : new Thread(new ThreadStart(ListenAndUnpack));
 
-            _blockingCollection = new BlockingCollection<(HarmonyPacket.PacketType, object)>();
+            _blockingCollection = new BlockingCollection<HarmonyPacket>();
             _communicationThread.Start();
             Instance = this;
-            MainWindow.debug.Text += "\nSuccessfully connected!";
         }
 
-        public void SendAsync((HarmonyPacket.PacketType, object) p) {
+        public void SendAsync(HarmonyPacket p) {
             _blockingCollection.Add(p);
         }
 
@@ -52,13 +54,36 @@ namespace Harmony {
             var tcpOut = new TcpClient(address, port);
 
             _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
-            Debug.WriteLine("Connected!");
+
+            var keyMap = new System.Collections.Generic.Dictionary<Keys, bool>();
+            foreach (Keys key in Enum.GetValues(typeof(Keys))) {
+                keyMap[key] = false;
+            }
             while (true) {
-                var o = _blockingCollection.Take();
-                HarmonyPacket hp = new HarmonyPacket() {Type = o.Item1};
-                switch (o.Item1) {
-                    case HarmonyPacket.PacketType.MousePacket:
-                        hp.PacketStr = JsonConvert.SerializeObject((HarmonyPacket.MousePacket) o.Item2);
+                var hp = _blockingCollection.Take();
+                switch (hp.Type) {
+                    case HarmonyPacket.PacketType.KeyBoardPacket:
+                        var kp = (HarmonyPacket.KeyboardPacket) hp.Pack;
+                        if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYDOWN) {
+                            //if (keyMap[kp.key]) continue;
+                            keyMap[kp.key] = true;
+                        } else if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYUP) {
+                            //if (!keyMap[kp.key]) continue;
+                            keyMap[kp.key] = false;
+                        }
+
+                        if (keyMap[Keys.Control] || keyMap[Keys.ControlKey] || keyMap[Keys.LControlKey] || keyMap[Keys.RControlKey]) {
+                            kp.pressedKeys |= 1;
+                        }
+
+                        if (keyMap[Keys.Alt] || keyMap[Keys.LMenu] || keyMap[Keys.RMenu]) {
+                            kp.pressedKeys |= 2;
+                        }
+
+                        if (keyMap[Keys.Shift] || keyMap[Keys.ShiftKey] || keyMap[Keys.LShiftKey] ||
+                            keyMap[Keys.RShiftKey]) {
+                            kp.pressedKeys |= 4;
+                        }
                         break;
                 }
                 _tx.WriteLine(JsonConvert.SerializeObject(hp));
@@ -73,37 +98,106 @@ namespace Harmony {
             _rx = new StreamReader(tcpInClient.GetStream(), Encoding.UTF8);
             while (true) {
                 var line = _rx.ReadLine();
-                Console.WriteLine(line);
+                if (line == null) continue;
 
                 var packet = JsonConvert.DeserializeObject<HarmonyPacket>(line);
                 if (packet == null) continue;
 
                 switch (packet.Type) {
                     case HarmonyPacket.PacketType.MousePacket:
-                        var mp = JsonConvert.DeserializeObject<HarmonyPacket.MousePacket>(packet.PacketStr);
+                        var mp = ((Newtonsoft.Json.Linq.JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
 
-                        var input = new MouseHook.MouseInput()
-                        {
-                            DwType = 1, Mstruct = new MouseHook.Msllhookstruct()
+                        var input = new MouseHook.MouseInput() {
+                            DwType = 1,
+                            Mstruct = new MouseHook.Msllhookstruct()
                             {
-                                pt = new Point(mp.PosX, mp.PosY), time = mp.Time, flags = mp.Flags, mouseData = mp.MouseData, dwExtraInfo = mp.DwExtraInfo
+                                x = mp.PosX,
+                                y = mp.PosY,
+                                flags = mp.Flags,
+                                mouseData = mp.MouseData,
+                                //dwExtraInfo = (IntPtr) mp.DwExtraInfo
                             }
                         };
 
-                        if (mp.Action == 0x0200) {
+                        var inputArr = new MouseHook.MouseInput[]
+                        {
+                            input
+                        };
+
+                        if (mp.wParam == 0x0200) { //Move
                             SetCursorPos(mp.PosX, mp.PosY); //Needs Elevation!!
                             //mouse_event(0x8000, mp.PosX, mp.PosY, (int)mp.MouseData, mp.DwExtraInfo);
                         } else {
-                            //mouse_event(mp.Action, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
+                            //mouse_event(mp.wParam, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
                         }
-                        //SendInput(0, input, Marshal.SizeOf(input));
+                        //SendInput(1, inputArr, Marshal.SizeOf(input));
+                        break;
+
+                    case HarmonyPacket.PacketType.KeyBoardPacket:
+                        //TODO: Keyboard stuff
+                        var kp = ((Newtonsoft.Json.Linq.JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
+
+                        //var kinput = new KeyboardHook.KeyboardInput()
+                        //{
+                        //    DwType = 0,
+                        //    Mstruct = new KeyboardHook.KEYBDINPUT()
+                        //    {
+                        //        dwFlags = (uint) kp.wParam,
+                        //        wVk = (ushort) kp.key,
+                        //        wScan = 0,
+
+                        //    }
+                        //};
+                        //var kinputArr = new KeyboardHook.KeyboardInput[]
+                        //{
+                        //    kinput
+                        //};
+                        //SendInput(1, kinputArr, Marshal.SizeOf(kinput));
+
+                        if (kp.wParam == (int)KeyboardHook.KeyEvent.WM_KEYDOWN) {
+
+                            if (Keys.Control == kp.key || Keys.ControlKey == kp.key || Keys.LControlKey == kp.key || Keys.RControlKey == kp.key
+                                || Keys.Alt == kp.key || Keys.LMenu == kp.key || Keys.RMenu == kp.key
+                                || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key) {
+                                break;
+                            }
+
+                            var k = kp.key.ToString().ToUpper();
+                            if (kp.key == Keys.Back) k = "BACKSPACE";
+                            if (kp.key == Keys.Space) k = " ";
+                            if (k.Equals("RETURN")) k = "ENTER";
+                            if (k.StartsWith("OEM")) break;
+                            var key = "";
+                            if (kp.key.ToString().Length > 1 && k.Length > 1) {
+                                key += "{" + k + "}";
+                            } else {
+                                key = k.ToLower();
+                            }
+                            if ((kp.pressedKeys & 4) != 0) {
+                                key = "+" + key;
+                            }
+                            if ((kp.pressedKeys & 2) != 0) {
+                                key = "%" + key;
+                            }
+                            if ((kp.pressedKeys & 1) != 0) {
+                                key = "^" + key;
+                            }
+                            SendKeys.SendWait(key);
+                        }
+                        break;
+
+                    case HarmonyPacket.PacketType.DisplayPacket:
+                        //TODO: Display stuff
                         break;
                 }
             }
         }
 
         [DllImport("user32.dll", SetLastError = true)]
-        static extern uint SendInput(uint cInputs, MouseHook.MouseInput input, int size); //Does not work (currently)
+        static extern uint SendInput(uint cInputs, MouseHook.MouseInput[] input, int size); //Does not work (currently)
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint SendInput(uint cInputs, KeyboardHook.KeyboardInput[] input, int size); //Does not work (currently)
 
         [DllImport("user32.dll")]
         private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo); //Does not work (currently)
