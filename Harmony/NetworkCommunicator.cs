@@ -58,7 +58,7 @@ namespace Harmony {
                 HarmonyPacket hp = new HarmonyPacket() {Type = o.Item1};
                 switch (o.Item1) {
                     case HarmonyPacket.PacketType.MousePacket:
-                        hp.Packet = JsonConvert.SerializeObject((HarmonyPacket.MousePacket) o.Item2);
+                        hp.PacketStr = JsonConvert.SerializeObject((HarmonyPacket.MousePacket) o.Item2);
                         break;
                 }
                 _tx.WriteLine(JsonConvert.SerializeObject(hp));
@@ -80,7 +80,7 @@ namespace Harmony {
 
                 switch (packet.Type) {
                     case HarmonyPacket.PacketType.MousePacket:
-                        var mp = JsonConvert.DeserializeObject<HarmonyPacket.MousePacket>(packet.Packet);
+                        var mp = JsonConvert.DeserializeObject<HarmonyPacket.MousePacket>(packet.PacketStr);
 
                         var input = new MouseHook.MouseInput()
                         {

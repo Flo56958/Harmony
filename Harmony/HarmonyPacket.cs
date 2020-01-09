@@ -4,11 +4,15 @@ namespace Harmony {
     public class HarmonyPacket {
 
         public PacketType Type { get; set; }
-        public string Packet { get; set; }
+        public string PacketStr { get; set; }
 
         public enum PacketType {
             MousePacket,
-            KeyBoardPacket
+            KeyBoardPacket,
+            DisplayPacket
+        }
+
+        public class Packet { 
         }
 
         public struct MousePacket {
@@ -19,6 +23,10 @@ namespace Harmony {
             public uint Flags;
             public uint Time;
             public IntPtr DwExtraInfo;
+        }
+
+        public struct DisplayPacket {
+            public System.Drawing.Rectangle[] screens;
         }
 
         public enum MouseActionType {

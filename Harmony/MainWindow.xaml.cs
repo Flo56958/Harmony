@@ -29,6 +29,7 @@ namespace Harmony
                 if (NetworkCommunicator.Instance == null) return;
                 if (isMaster) {
                     MouseHook.Start();
+                    KeyboardHook.Start();
                 }
 
                 started = true;
