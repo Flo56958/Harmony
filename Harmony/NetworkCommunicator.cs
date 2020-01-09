@@ -163,9 +163,18 @@ namespace Harmony {
                             }
 
                             var k = kp.key.ToString().ToUpper();
-                            if (kp.key == Keys.Back) k = "BACKSPACE";
-                            if (kp.key == Keys.Space) k = " ";
-                            if (k.Equals("RETURN")) k = "ENTER";
+                            switch (kp.key) { //TODO: Add special characters
+                                case Keys.Back:
+                                    k = "BACKSPACE";
+                                    break;
+                                case Keys.Space:
+                                    k = " ";
+                                    break;
+                                case Keys.Return:
+                                    k = "ENTER";
+                                    break;
+                            }
+
                             if (k.StartsWith("OEM")) break;
                             var key = "";
                             if (kp.key.ToString().Length > 1 && k.Length > 1) {
