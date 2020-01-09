@@ -14,6 +14,7 @@ namespace Harmony
             InitializeComponent();
             debug = Debug;
             Debug.Text = "";
+            DisplayManager.SetUp();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
