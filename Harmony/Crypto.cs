@@ -47,8 +47,8 @@ namespace Harmony {
 
         public static string Decrypt(string cipherText) {
             var bytes = Convert.FromBase64String(cipherText);
-            var data = bytes.Skip(Keysize / 4).Take(bytes.Length - Keysize / 4).ToArray();
-            var iv = bytes.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
+            var data = bytes.Skip(Keysize / 8).Take(bytes.Length - Keysize / 8).ToArray();
+            var iv = bytes.Take(Keysize / 8).ToArray();
 
             using (var rijndaelManaged = new RijndaelManaged()) {
                 rijndaelManaged.BlockSize = 256;

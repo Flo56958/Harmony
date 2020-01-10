@@ -106,7 +106,7 @@ namespace Harmony {
 
             var saltPacket = _rx.ReadLine();
             if (saltPacket == null) {
-                MainWindow.Log("Did not recieve Salt!", true);
+                MainWindow.Log("Did not receive Salt!", true);
                 tcpInClient.Close();
                 tcpIn.Stop();
                 return;
@@ -114,13 +114,13 @@ namespace Harmony {
 
             var saltPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(saltPacket);
             if (saltPacketReal.Type != HarmonyPacket.PacketType.SaltPacket) {
-                MainWindow.Log($"Received wrong Packet! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {saltPacketReal.Type.ToString()}", true);
+                MainWindow.Log($"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {saltPacketReal.Type.ToString()}", true);
                 tcpInClient.Close();
                 tcpIn.Stop();
                 return;
             }
-            Crypto.Init(Convert.FromBase64String(((Newtonsoft.Json.Linq.JObject)saltPacketReal.Pack).ToObject<string>()), MainWindow.Password);
-            MainWindow.Log("Successfully optained Salt-Packet!", false);
+            Crypto.Init(Convert.FromBase64String(saltPacketReal.Pack), MainWindow.Password);
+            MainWindow.Log("Successfully obtained Salt-Packet!", false);
 
             while (!_rx.EndOfStream) {
                 var line = _rx.ReadLine();
