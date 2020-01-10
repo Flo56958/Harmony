@@ -8,12 +8,14 @@ namespace Harmony
     public partial class MainWindow : Window {
         private bool started = false;
 
-        public static TextBlock debug;
+        private static MainWindow window;
+
+        public static string Password;
+
         public MainWindow()
         {
             InitializeComponent();
-            debug = Debug;
-            Debug.Text = "";
+            window = this;
             DisplayManager.SetUp();
         }
 
@@ -24,6 +26,7 @@ namespace Harmony
 
                 if (!Int32.TryParse(port, out var iport)) return;
                 bool isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
+                Password = PasswordInput.Text;
 
                 var networkCommunicator = new NetworkCommunicator(ip, iport, isMaster);
                 if (NetworkCommunicator.Instance == null) return;
@@ -31,6 +34,8 @@ namespace Harmony
                     MouseHook.Start();
                     KeyboardHook.Start();
                 }
+
+                StartButton.Content = "Stop";
 
                 started = true;
             }
@@ -41,7 +46,17 @@ namespace Harmony
                 }
                 
                 started = false;
+                StartButton.Content = "Start";
             }
         }
+
+        public static void Log(string message, bool error) {
+            var err = error ? "[ERROR] " : "[INFO] "; 
+            window.Dispatcher.Invoke(() => {
+                window.Debug.AppendText("\n" + err + message);
+            });
+        }
+
+      
     }
 }

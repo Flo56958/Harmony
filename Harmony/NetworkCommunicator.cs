@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Windows.Data;
 using System.Windows.Forms;
-using System.Windows.Input;
 using Newtonsoft.Json;
 
 namespace Harmony {
@@ -42,18 +38,25 @@ namespace Harmony {
 
         public void Close() {
             _communicationThread.Abort();
-            if (_rx == null) {
-                _tx.Close();
-            }
-            else {
-                _rx.Close();
-            }
+            _tx?.Close();
+            _rx?.Close();
         }
 
         private void PackAndSend() {
             var tcpOut = new TcpClient(address, port);
 
             _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
+
+            MainWindow.Log($"Connected to {tcpOut.Client.RemoteEndPoint} as Master!", false);
+
+            var salt = Crypto.Init(MainWindow.Password);
+            var saltPacket = new HarmonyPacket() {
+                Type = HarmonyPacket.PacketType.SaltPacket,
+                Pack = Convert.ToBase64String(salt)
+            };
+
+            _tx.WriteLine(JsonConvert.SerializeObject(saltPacket));
+            MainWindow.Log("Send Salt-Packet!", false);
 
             var keyMap = new System.Collections.Generic.Dictionary<Keys, bool>();
             foreach (Keys key in Enum.GetValues(typeof(Keys))) {
@@ -65,10 +68,8 @@ namespace Harmony {
                     case HarmonyPacket.PacketType.KeyBoardPacket:
                         var kp = (HarmonyPacket.KeyboardPacket) hp.Pack;
                         if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYDOWN) {
-                            //if (keyMap[kp.key]) continue;
                             keyMap[kp.key] = true;
                         } else if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYUP) {
-                            //if (!keyMap[kp.key]) continue;
                             keyMap[kp.key] = false;
                         }
 
@@ -84,9 +85,14 @@ namespace Harmony {
                             keyMap[Keys.RShiftKey]) {
                             kp.pressedKeys |= 4;
                         }
+
+                        if (keyMap[Keys.LWin] || keyMap[Keys.RWin]) {
+                            kp.pressedKeys |= 8;
+                        }
                         break;
                 }
-                _tx.WriteLine(JsonConvert.SerializeObject(hp));
+
+                _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
         }
 
@@ -96,9 +102,30 @@ namespace Harmony {
             var tcpInClient = tcpIn.AcceptTcpClient();
 
             _rx = new StreamReader(tcpInClient.GetStream(), Encoding.UTF8);
-            while (true) {
+            MainWindow.Log($"Connected to {tcpInClient.Client.RemoteEndPoint} as Slave!", false);
+
+            var saltPacket = _rx.ReadLine();
+            if (saltPacket == null) {
+                MainWindow.Log("Did not recieve Salt!", true);
+                tcpInClient.Close();
+                tcpIn.Stop();
+                return;
+            }
+
+            var saltPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(saltPacket);
+            if (saltPacketReal.Type != HarmonyPacket.PacketType.SaltPacket) {
+                MainWindow.Log($"Received wrong Packet! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {saltPacketReal.Type.ToString()}", true);
+                tcpInClient.Close();
+                tcpIn.Stop();
+                return;
+            }
+            Crypto.Init(Convert.FromBase64String(((Newtonsoft.Json.Linq.JObject)saltPacketReal.Pack).ToObject<string>()), MainWindow.Password);
+            MainWindow.Log("Successfully optained Salt-Packet!", false);
+
+            while (!_rx.EndOfStream) {
                 var line = _rx.ReadLine();
                 if (line == null) continue;
+                line = Crypto.Decrypt(line);
 
                 var packet = JsonConvert.DeserializeObject<HarmonyPacket>(line);
                 if (packet == null) continue;
@@ -107,22 +134,22 @@ namespace Harmony {
                     case HarmonyPacket.PacketType.MousePacket:
                         var mp = ((Newtonsoft.Json.Linq.JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
 
-                        var input = new MouseHook.MouseInput() {
-                            DwType = 1,
-                            Mstruct = new MouseHook.Msllhookstruct()
-                            {
-                                x = mp.PosX,
-                                y = mp.PosY,
-                                flags = mp.Flags,
-                                mouseData = mp.MouseData,
-                                //dwExtraInfo = (IntPtr) mp.DwExtraInfo
-                            }
-                        };
+                        //var input = new MouseHook.MouseInput() {
+                        //    DwType = 1,
+                        //    Mstruct = new MouseHook.Msllhookstruct()
+                        //    {
+                        //        x = mp.PosX,
+                        //        y = mp.PosY,
+                        //        flags = mp.Flags,
+                        //        mouseData = mp.MouseData,
+                        //        //dwExtraInfo = (IntPtr) mp.DwExtraInfo
+                        //    }
+                        //};
 
-                        var inputArr = new MouseHook.MouseInput[]
-                        {
-                            input
-                        };
+                        //var inputArr = new MouseHook.MouseInput[]
+                        //{
+                        //    input
+                        //};
 
                         if (mp.wParam == 0x0200) { //Move
                             SetCursorPos(mp.PosX, mp.PosY); //Needs Elevation!!
@@ -158,7 +185,8 @@ namespace Harmony {
 
                             if (Keys.Control == kp.key || Keys.ControlKey == kp.key || Keys.LControlKey == kp.key || Keys.RControlKey == kp.key
                                 || Keys.Alt == kp.key || Keys.LMenu == kp.key || Keys.RMenu == kp.key
-                                || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key) {
+                                || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key
+                                || Keys.LWin == kp.key || Keys.RWin == kp.key) {
                                 break;
                             }
 

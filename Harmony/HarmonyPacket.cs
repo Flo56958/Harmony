@@ -10,7 +10,8 @@ namespace Harmony {
         public enum PacketType {
             MousePacket,
             KeyBoardPacket,
-            DisplayPacket
+            DisplayPacket,
+            SaltPacket
         }
 
         public class MousePacket {
@@ -30,7 +31,7 @@ namespace Harmony {
         public class KeyboardPacket {
             public Keys key { get; set; }
             public int wParam { get; set; }
-            public int pressedKeys { get; set; } //first bit ctrl; second bit alt; third bit shift
+            public int pressedKeys { get; set; } //first bit ctrl; second bit alt; third bit shift; forth bit windows
         }
 
         public enum MouseActionType {
