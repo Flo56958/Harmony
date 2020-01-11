@@ -165,7 +165,7 @@ namespace Harmony {
             })));
             MainWindow.Log("Send Display-Packet!", false);
 
-            var displayPacket= _rx.ReadLine();
+            var displayPacket= Crypto.Decrypt(_rx.ReadLine());
             if (displayPacket == null) {
                 MainWindow.Log("Did not receive Display-Packet!", true);
                 tcpInClient.Close();
@@ -173,9 +173,9 @@ namespace Harmony {
                 return;
             }
 
-            var displayPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(saltPacket);
-            if (displayPacketReal.Type != HarmonyPacket.PacketType.SaltPacket) {
-                MainWindow.Log($"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {displayPacketReal.Type.ToString()}", true);
+            var displayPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(displayPacket);
+            if (displayPacketReal.Type != HarmonyPacket.PacketType.DisplayPacket) {
+                MainWindow.Log($"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.DisplayPacket.ToString()}; Actual: {displayPacketReal.Type.ToString()}", true);
                 tcpInClient.Close();
                 tcpIn.Stop();
                 return;
