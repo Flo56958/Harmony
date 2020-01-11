@@ -42,7 +42,7 @@ namespace Harmony {
                     Time = hookStruct.time
                 }
             });
-            return CallNextHookEx(_hookId, nCode, wParam, lParam);
+            return (IntPtr) NetworkCommunicator.onSlave + (int) CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
         [StructLayout(LayoutKind.Sequential)]

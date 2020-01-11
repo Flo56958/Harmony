@@ -41,7 +41,7 @@ namespace Harmony {
                 }
             });
 
-            return CallNextHookEx(_hookId, nCode, wParam, lParam);
+            return (IntPtr) NetworkCommunicator.onSlave + (int) CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
         public struct KeyboardInput {

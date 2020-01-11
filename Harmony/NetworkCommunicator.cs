@@ -22,6 +22,8 @@ namespace Harmony {
 
         private readonly Thread _communicationThread;
 
+        public static volatile int onSlave = 0;
+
         public NetworkCommunicator(string address, int port, bool isMaster) {
             if (Instance != null) return;
             this._address = address;
@@ -82,6 +84,8 @@ namespace Harmony {
 
             var displays = ((JObject)displayPacketReal.Pack).ToObject<HarmonyPacket.DisplayPacket>();
             foreach (var dis in displays.screens) {
+                if (dis.Screen.Location.X == 0 && dis.Screen.Location.Y == 0) DisplayManager.slaveMain = dis;
+                dis.OwnDisplay = false;
                 DisplayManager.AddRight(dis);
             }
 
@@ -94,6 +98,11 @@ namespace Harmony {
             MainWindow.Log("Finished Handshake with Slave!", false);
             DisplayManager.PrintScreenConfiguration();
 
+            int mouseX = 0;
+            int mouseY = 0;
+            int mouseMX = 0;
+            int mouseMY = 0;
+
             while (true) {
                 var hp = _blockingCollection.Take();
                 switch (hp.Type) {
@@ -104,6 +113,7 @@ namespace Harmony {
                         } else if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYUP) {
                             keyMap[kp.key] = false;
                         }
+                        if (onSlave == 0) continue;
 
                         if (keyMap[Keys.Control] || keyMap[Keys.ControlKey] || keyMap[Keys.LControlKey] || keyMap[Keys.RControlKey]) {
                             kp.pressedKeys |= 1;
@@ -120,6 +130,45 @@ namespace Harmony {
 
                         if (keyMap[Keys.LWin] || keyMap[Keys.RWin]) {
                             kp.pressedKeys |= 8;
+                        }
+                        break;
+                    case HarmonyPacket.PacketType.MousePacket:
+                        var mp = (HarmonyPacket.MousePacket) hp.Pack;
+
+                        if (onSlave == 0) {
+                            var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
+                            if (onScreen == null) continue;
+                            mouseX = mp.PosX;
+                            mouseY = mp.PosY;
+                            if (onScreen.OwnDisplay) {
+                                mouseMX = mp.PosX;
+                                mouseMY = mp.PosY;
+                                continue;
+                            }
+                            else {
+                                //TODO: Hide Mouse
+                                onSlave = 1;
+                            }
+                        }
+                        else {
+                            mouseX += mp.PosX - mouseMX;
+                            mouseY += mp.PosY - mouseMY;
+                            var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
+                            if (onScreen == null) {
+                                mouseX -= mp.PosX - mouseMX;
+                                mouseY -= mp.PosY - mouseMY;
+                                continue;
+                            }
+
+                            if (onScreen.OwnDisplay) {
+                                //TODO: Set Mouse Position of Master
+                                //TODO: Show Mouse
+                                onSlave = 0;
+                            }
+                            else {
+                                mp.PosX = mouseX;
+                                mp.PosY = mouseY;
+                            }
                         }
                         break;
                 }
@@ -196,35 +245,44 @@ namespace Harmony {
                     case HarmonyPacket.PacketType.MousePacket:
                         var mp = ((JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
 
-                        //var input = new MouseHook.MouseInput() {
-                        //    DwType = 1,
-                        //    Mstruct = new MouseHook.Msllhookstruct()
-                        //    {
-                        //        x = mp.PosX,
-                        //        y = mp.PosY,
-                        //        flags = mp.Flags,
-                        //        mouseData = mp.MouseData,
-                        //        //dwExtraInfo = (IntPtr) mp.DwExtraInfo
-                        //    }
-                        //};
+                        var d = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
+                        if (d == null) continue;
 
-                        //var inputArr = new MouseHook.MouseInput[]
-                        //{
-                        //    input
-                        //};
+                        if (d.OwnDisplay) {
+                            //TODO: Show Mouse when hidden
+                            //var input = new MouseHook.MouseInput() {
+                            //    DwType = 1,
+                            //    Mstruct = new MouseHook.Msllhookstruct()
+                            //    {
+                            //        x = mp.PosX,
+                            //        y = mp.PosY,
+                            //        flags = mp.Flags,
+                            //        mouseData = mp.MouseData,
+                            //        //dwExtraInfo = (IntPtr) mp.DwExtraInfo
+                            //    }
+                            //};
 
-                        if (mp.wParam == 0x0200) { //Move
-                            SetCursorPos(mp.PosX, mp.PosY); //Needs Elevation!!
-                            //mouse_event(0x8000, mp.PosX, mp.PosY, (int)mp.MouseData, mp.DwExtraInfo);
+                            //var inputArr = new MouseHook.MouseInput[]
+                            //{
+                            //    input
+                            //};
+
+                            if (mp.wParam == 0x0200) { //Move
+                                SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
+                                //mouse_event(0x8000, mp.PosX, mp.PosY, (int)mp.MouseData, mp.DwExtraInfo);
+                            } else {
+                                //mouse_event(mp.wParam, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
+                            }
+                            //SendInput(1, inputArr, Marshal.SizeOf(input));
+
                         } else {
-                            //mouse_event(mp.wParam, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
+                            //TODO: Hide Mouse
+
                         }
-                        //SendInput(1, inputArr, Marshal.SizeOf(input));
                         break;
 
                     case HarmonyPacket.PacketType.KeyBoardPacket:
-                        //TODO: Keyboard stuff
-                        var kp = ((Newtonsoft.Json.Linq.JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
+                        var kp = ((JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
 
                         //var kinput = new KeyboardHook.KeyboardInput()
                         //{

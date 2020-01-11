@@ -8,17 +8,19 @@ namespace Harmony {
 
         public static List<Display> displays { get; set; }
 
+        public static Display slaveMain { get; set; }
+
         //SetUp-Function for Slave and Master
         public static void SetUp() {
             var screens = Screen.AllScreens;
             displays = new List<Display>();
 
-            for(var i = 0; i < screens.Length; i++) {
+            foreach (var scr in screens) {
                 displays.Add(new Display()
                 {
-                    Screen = screens[i].Bounds, 
+                    Screen = scr.Bounds, 
                     OwnDisplay = true,
-                    Location = screens[i].Bounds.Location
+                    Location = scr.Bounds.Location
                 });
             }
 
@@ -31,6 +33,7 @@ namespace Harmony {
             displays = new List<Display>();
             foreach (var d in displ) {
                 d.OwnDisplay = !d.OwnDisplay;
+                if (d.OwnDisplay && d.Screen.Location.X == 0 && d.Screen.Location.Y == 0) slaveMain = d;
                 displays.Add(d);
             }
         }
@@ -53,7 +56,8 @@ namespace Harmony {
             var count = 0;
             MainWindow.Log("Current Screen-Configuration:", false);
             foreach (var dis in displays) {
-                MainWindow.Log($"Screen {count++}: X:{dis.Screen.Size.Width}, Y:{dis.Screen.Size.Height}, Pos: {dis.Location}", false);
+                var b = (dis.OwnDisplay) ? "own" : "foreign";
+                MainWindow.Log($"Screen {count++},{b}: X:{dis.Screen.Size.Width}, Y:{dis.Screen.Size.Height}, Pos: {dis.Location}", false);
             }
         }
 
