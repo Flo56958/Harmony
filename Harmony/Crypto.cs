@@ -16,7 +16,7 @@ namespace Harmony {
         }
 
         public static byte[] Init(string passPhrase) {
-            byte[] salt = Generate256BitsOfRandomEntropy();
+            var salt = Generate256BitsOfRandomEntropy();
             derivedPass = new Rfc2898DeriveBytes(passPhrase, salt, DerivationIterations).GetBytes(Keysize / 8);
             return salt;
         }

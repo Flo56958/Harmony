@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Harmony {
     public class NetworkCommunicator {
@@ -16,15 +17,15 @@ namespace Harmony {
         private StreamReader _rx;
         private readonly BlockingCollection<HarmonyPacket> _blockingCollection;
 
-        private readonly string address;
-        private readonly int port;
+        private readonly string _address;
+        private readonly int _port;
 
         private readonly Thread _communicationThread;
 
         public NetworkCommunicator(string address, int port, bool isMaster) {
             if (Instance != null) return;
-            this.address = address;
-            this.port = port;
+            this._address = address;
+            this._port = port;
             _communicationThread = isMaster ? new Thread(new ThreadStart(PackAndSend)) : new Thread(new ThreadStart(ListenAndUnpack));
 
             _blockingCollection = new BlockingCollection<HarmonyPacket>();
@@ -43,14 +44,15 @@ namespace Harmony {
         }
 
         private void PackAndSend() {
-            var tcpOut = new TcpClient(address, port);
+            var tcpOut = new TcpClient(_address, _port);
 
             _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
+            _rx = new StreamReader(tcpOut.GetStream(), Encoding.UTF8);
 
             MainWindow.Log($"Connected to {tcpOut.Client.RemoteEndPoint} as Master!", false);
 
             var salt = Crypto.Init(MainWindow.Password);
-            var saltPacket = new HarmonyPacket() {
+            var saltPacket = new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.SaltPacket,
                 Pack = Convert.ToBase64String(salt)
             };
@@ -62,6 +64,36 @@ namespace Harmony {
             foreach (Keys key in Enum.GetValues(typeof(Keys))) {
                 keyMap[key] = false;
             }
+
+            var displayPacket = _rx.ReadLine();
+            if (displayPacket == null) {
+                MainWindow.Log("Did not receive Displays from Slave!", true);
+                tcpOut.Close();
+                return;
+            }
+            displayPacket = Crypto.Decrypt(displayPacket);
+
+            var displayPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(displayPacket);
+            if (displayPacketReal.Type != HarmonyPacket.PacketType.DisplayPacket) {
+                MainWindow.Log($"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {displayPacketReal.Type.ToString()}", true);
+                tcpOut.Close();
+                return;
+            }
+
+            var displays = ((JObject)displayPacketReal.Pack).ToObject<HarmonyPacket.DisplayPacket>();
+            foreach (var dis in displays.screens) {
+                DisplayManager.AddRight(dis);
+            }
+
+            _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket {
+                Type = HarmonyPacket.PacketType.DisplayPacket,
+                Pack = new HarmonyPacket.DisplayPacket {
+                    screens = DisplayManager.displays
+                }
+            })));
+            MainWindow.Log("Finished Handshake with Slave!", false);
+            DisplayManager.PrintScreenConfiguration();
+
             while (true) {
                 var hp = _blockingCollection.Take();
                 switch (hp.Type) {
@@ -97,10 +129,11 @@ namespace Harmony {
         }
 
         private void ListenAndUnpack() {
-            var tcpIn = new TcpListener(IPAddress.Any, port);
+            var tcpIn = new TcpListener(IPAddress.Any, _port);
             tcpIn.Start();
             var tcpInClient = tcpIn.AcceptTcpClient();
 
+            _tx = new StreamWriter(tcpInClient.GetStream()) { AutoFlush = true };
             _rx = new StreamReader(tcpInClient.GetStream(), Encoding.UTF8);
             MainWindow.Log($"Connected to {tcpInClient.Client.RemoteEndPoint} as Slave!", false);
 
@@ -122,6 +155,35 @@ namespace Harmony {
             Crypto.Init(Convert.FromBase64String(saltPacketReal.Pack), MainWindow.Password);
             MainWindow.Log("Successfully obtained Salt-Packet!", false);
 
+            _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket
+            {
+                Type = HarmonyPacket.PacketType.DisplayPacket,
+                Pack = new HarmonyPacket.DisplayPacket
+                {
+                    screens = DisplayManager.displays
+                }
+            })));
+            MainWindow.Log("Send Display-Packet!", false);
+
+            var displayPacket= _rx.ReadLine();
+            if (displayPacket == null) {
+                MainWindow.Log("Did not receive Display-Packet!", true);
+                tcpInClient.Close();
+                tcpIn.Stop();
+                return;
+            }
+
+            var displayPacketReal = JsonConvert.DeserializeObject<HarmonyPacket>(saltPacket);
+            if (displayPacketReal.Type != HarmonyPacket.PacketType.SaltPacket) {
+                MainWindow.Log($"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket.ToString()}; Actual: {displayPacketReal.Type.ToString()}", true);
+                tcpInClient.Close();
+                tcpIn.Stop();
+                return;
+            }
+            DisplayManager.SetUp(((JObject)displayPacketReal.Pack).ToObject<HarmonyPacket.DisplayPacket>().screens);
+            MainWindow.Log("Finished Handshake with Master!", false);
+            DisplayManager.PrintScreenConfiguration();
+
             while (!_rx.EndOfStream) {
                 var line = _rx.ReadLine();
                 if (line == null) continue;
@@ -132,7 +194,7 @@ namespace Harmony {
 
                 switch (packet.Type) {
                     case HarmonyPacket.PacketType.MousePacket:
-                        var mp = ((Newtonsoft.Json.Linq.JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
+                        var mp = ((JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
 
                         //var input = new MouseHook.MouseInput() {
                         //    DwType = 1,

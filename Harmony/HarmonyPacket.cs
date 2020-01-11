@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Windows.Documents;
 using System.Windows.Forms;
 
 namespace Harmony {
@@ -25,7 +27,7 @@ namespace Harmony {
         }
 
         public class DisplayPacket {
-            public System.Drawing.Rectangle[] screens { get; set; }
+            public List<DisplayManager.Display> screens { get; set; }
         }
 
         public class KeyboardPacket {
