@@ -259,7 +259,7 @@ namespace Harmony {
                         if (d.OwnDisplay) {
                             //TODO: Show Mouse when hidden
                             if (mp.Action == (uint) MouseFlag.Move) { //Move
-                                SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
+                                NativeMethods.SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
                             } else {
                                 Mouse.sendInput(mp);
                             }
@@ -273,59 +273,20 @@ namespace Harmony {
                     case HarmonyPacket.PacketType.KeyBoardPacket:
                         var kp = ((JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
                         Keyboard.SendInput(kp);
-
-                        //if (kp.wParam == 256) {
-
-                        //    if (Keys.Control == kp.key || Keys.ControlKey == kp.key || Keys.LControlKey == kp.key || Keys.RControlKey == kp.key
-                        //        || Keys.Alt == kp.key || Keys.LMenu == kp.key || Keys.RMenu == kp.key
-                        //        || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key
-                        //        || Keys.LWin == kp.key || Keys.RWin == kp.key) {
-                        //        break;
-                        //    }
-
-                        //    var k = kp.key.ToString().ToUpper();
-                        //    switch (kp.key) { //TODO: Add special characters
-                        //        case Keys.Back:
-                        //            k = "BACKSPACE";
-                        //            break;
-                        //        case Keys.Space:
-                        //            k = " ";
-                        //            break;
-                        //        case Keys.Return:
-                        //            k = "ENTER";
-                        //            break;
-                        //    }
-
-                        //    if (k.StartsWith("OEM")) break;
-                        //    var key = "";
-                        //    if (kp.key.ToString().Length > 1 && k.Length > 1) {
-                        //        key += "{" + k + "}";
-                        //    } else {
-                        //        key = k.ToLower();
-                        //    }
-                        //    if ((kp.pressedKeys & 4) != 0) {
-                        //        key = "+" + key;
-                        //    }
-                        //    if ((kp.pressedKeys & 2) != 0) {
-                        //        key = "%" + key;
-                        //    }
-                        //    if ((kp.pressedKeys & 1) != 0) {
-                        //        key = "^" + key;
-                        //    }
-                        //    SendKeys.SendWait(key);
-                        //}
-                        break;
-
-                    case HarmonyPacket.PacketType.DisplayPacket:
-                        //TODO: Display stuff
                         break;
                 }
             }
         }
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool SetCursorPos(int x, int y);
+        public static string GetLocalIPAddress() {
+            string localIP;
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
+                socket.Connect("8.8.8.8", 65530);
+                var endPoint = socket.LocalEndPoint as IPEndPoint;
+                localIP = endPoint.Address.ToString();
+            }
 
+            return localIP;
+        }
     }
 }

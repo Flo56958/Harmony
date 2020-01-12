@@ -15,6 +15,7 @@ namespace Harmony
         {
             InitializeComponent();
             _window = this;
+            Log($"The IP-Address of this maschine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
         }
 

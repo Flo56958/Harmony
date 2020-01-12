@@ -9,26 +9,30 @@ namespace Harmony.Windows {
     internal static class NativeMethods {
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint SendInput(uint numberOfInputs, INPUT[] inputs, int sizeOfInputStructure);
+        internal static extern uint SendInput(uint numberOfInputs, INPUT[] inputs, int sizeOfInputStructure);
 
         [DllImport("user32.dll")]
-        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+        internal static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
 
 
-        public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
+        internal delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr SetWindowsHookEx(int idHook, NativeMethods.HookProc lpfn, IntPtr hMod, uint dwThreadId);
+        internal static extern IntPtr SetWindowsHookEx(int idHook, NativeMethods.HookProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+        internal static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr GetModuleHandle(string lpModuleName);
+        internal static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetCursorPos(int x, int y);
     }
 }
