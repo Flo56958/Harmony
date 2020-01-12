@@ -11,15 +11,15 @@ namespace Harmony {
         private const int Keysize = 256;
         private const int DerivationIterations = 100_000;
 
-        private static byte[] derivedPass;
+        private static byte[] _derivedPass;
 
         internal static void Init(byte[] salt, SecureString passPhrase) {
-            derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
+            _derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
         }
 
         internal static byte[] Init(SecureString passPhrase) {
             var salt = Generate256BitsOfRandomEntropy();
-            derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
+            _derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
             return salt;
         }
 
@@ -32,7 +32,7 @@ namespace Harmony {
                 rijndaelManaged.Mode = CipherMode.CBC;
                 rijndaelManaged.BlockSize = 256;
 
-                using (var encryptor = rijndaelManaged.CreateEncryptor(derivedPass, iv)) {
+                using (var encryptor = rijndaelManaged.CreateEncryptor(_derivedPass, iv)) {
                     using (var ms = new MemoryStream()) {
                         using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {
                             cs.Write(bytes, 0, bytes.Length);
@@ -57,7 +57,7 @@ namespace Harmony {
                 rijndaelManaged.Mode = CipherMode.CBC;
                 rijndaelManaged.Padding = PaddingMode.PKCS7;
 
-                using (var decryptor = rijndaelManaged.CreateDecryptor(derivedPass, iv)) {
+                using (var decryptor = rijndaelManaged.CreateDecryptor(_derivedPass, iv)) {
                     using (var ms = new MemoryStream(data)) {
                         using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read)) {
                             var plainTextBytes = new byte[data.Length];

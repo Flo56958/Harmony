@@ -260,7 +260,7 @@ namespace Harmony {
                             if (mp.Action == (uint) MouseFlag.Move) { //Move
                                 NativeMethods.SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
                             } else {
-                                Mouse.sendInput(mp);
+                                Mouse.SendInput(mp);
                             }
 
                         } else {

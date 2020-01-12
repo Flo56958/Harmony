@@ -27,9 +27,8 @@ namespace Harmony
 
                 if (!int.TryParse(port, out var iport)) return;
                 Password = PasswordInput.SecurePassword;
-                Log(Crypto.SecureStringToString(Password), false);
 
-                var networkCommunicator = new NetworkCommunicator(ip, iport, isMaster);
+                new NetworkCommunicator(ip, iport, isMaster);
                 if (NetworkCommunicator.Instance == null) return;
                 if (isMaster) {
                     MouseHook.Start();

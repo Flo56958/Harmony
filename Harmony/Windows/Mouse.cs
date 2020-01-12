@@ -25,21 +25,21 @@ namespace Harmony.Windows {
         public static uint MapWParamToFlags(int wParam) {
             switch (wParam) {
                 case 512:
-                    return (uint) MouseFlag.Move;
+                    return (uint)MouseFlag.Move;
                 case 513:
-                    return (uint) MouseFlag.LeftDown;
+                    return (uint)MouseFlag.LeftDown;
                 case 514:
-                    return (uint) MouseFlag.LeftUp;
+                    return (uint)MouseFlag.LeftUp;
                 case 516:
-                    return (uint) MouseFlag.RightDown;
+                    return (uint)MouseFlag.RightDown;
                 case 517:
-                    return (uint) MouseFlag.RightUp;
+                    return (uint)MouseFlag.RightUp;
                 case 519:
-                    return (uint) MouseFlag.MiddleDown;
+                    return (uint)MouseFlag.MiddleDown;
                 case 520:
-                    return (uint) MouseFlag.MiddleUp;
+                    return (uint)MouseFlag.MiddleUp;
                 case 522:
-                    return 0; //TODO: Find option to map MouseWheel
+                    return (uint)MouseFlag.VerticalWheel; //TODO: Find option to map MouseWheel
                 case 523:
                     return 0; //TODO: Find option to map Mouse Back Down
                 case 524:
@@ -49,19 +49,30 @@ namespace Harmony.Windows {
             return 0;
         }
 
-        public static bool sendInput(HarmonyPacket.MousePacket mp) {
-            var input = new INPUT()
-            {
-                Type = InputType.Mouse,
-                Data = new MOUSEKEYBOARDINPUT()
-                {
-                    Mouse = new MOUSEINPUT()
-                    {
-                        Flags = mp.Flags | mp.Action,
-                        MouseData = mp.MouseData,
+        public static bool SendInput(HarmonyPacket.MousePacket mp) {
+            INPUT input;
+            if (mp.Action == 0) return false;
+            else if (mp.Action == (ulong) MouseFlag.VerticalWheel) {
+                input = new INPUT() {
+                    Type = InputType.Mouse,
+                    Data = new MOUSEKEYBOARDINPUT() {
+                        Mouse = new MOUSEINPUT() {
+                            Flags = mp.Flags | mp.Action,
+                            MouseData = (mp.MouseData == 7864320) ? 1 * 120 : unchecked((uint) (-1 * 120)),
+                        }
                     }
-                }
-            };
+                };
+            } else {
+                input = new INPUT() {
+                    Type = InputType.Mouse,
+                    Data = new MOUSEKEYBOARDINPUT() {
+                        Mouse = new MOUSEINPUT() {
+                            Flags = mp.Flags | mp.Action,
+                            MouseData = mp.MouseData,
+                        }
+                    }
+                };
+            }
             return NativeMethods.SendInput(1, new INPUT[] { input }, Marshal.SizeOf(input)) == 0;
         }
     }
