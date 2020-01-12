@@ -1,31 +1,30 @@
 ﻿using System;
 using System.Windows;
-using System.Windows.Controls;
+using Harmony.Windows;
 
 namespace Harmony
 {
-
     public partial class MainWindow : Window {
-        private bool started = false;
+        private bool _started = false;
 
-        private static MainWindow window;
+        private static MainWindow _window;
 
         public static string Password;
 
         public MainWindow()
         {
             InitializeComponent();
-            window = this;
+            _window = this;
             DisplayManager.SetUp();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
-            if(!started) { 
+            if(!_started) { 
                 var ip = IPInput.Text;
                 var port = PortInput.Text;
 
-                if (!Int32.TryParse(port, out var iport)) return;
-                bool isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
+                if (!int.TryParse(port, out var iport)) return;
+                var isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
                 Password = PasswordInput.Text;
 
                 var networkCommunicator = new NetworkCommunicator(ip, iport, isMaster);
@@ -37,7 +36,7 @@ namespace Harmony
 
                 StartButton.Content = "Stop";
 
-                started = true;
+                _started = true;
             }
             else {
                 if (NetworkCommunicator.Instance != null) {
@@ -45,18 +44,16 @@ namespace Harmony
                     NetworkCommunicator.Instance = null;
                 }
                 
-                started = false;
+                _started = false;
                 StartButton.Content = "Start";
             }
         }
 
         public static void Log(string message, bool error) {
             var err = error ? "[ERROR] " : "[INFO] "; 
-            window.Dispatcher.Invoke(() => {
-                window.Debug.AppendText("\n" + err + message);
+            _window.Dispatcher?.Invoke(() => {
+                _window.Debug.AppendText("\n" + err + message);
             });
         }
-
-      
     }
 }

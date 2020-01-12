@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -7,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Harmony.Windows;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -98,20 +100,23 @@ namespace Harmony {
             MainWindow.Log("Finished Handshake with Slave!", false);
             DisplayManager.PrintScreenConfiguration();
 
-            int mouseX = 0;
-            int mouseY = 0;
-            int mouseMX = 0;
-            int mouseMY = 0;
+            var mouseX = 0;
+            var mouseY = 0;
+            var mouseMX = 0;
+            var mouseMY = 0;
 
             while (true) {
                 var hp = _blockingCollection.Take();
                 switch (hp.Type) {
                     case HarmonyPacket.PacketType.KeyBoardPacket:
                         var kp = (HarmonyPacket.KeyboardPacket) hp.Pack;
-                        if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYDOWN) {
-                            keyMap[kp.key] = true;
-                        } else if (kp.wParam == (int) KeyboardHook.KeyEvent.WM_KEYUP) {
-                            keyMap[kp.key] = false;
+                        switch (kp.wParam) {
+                            case (int) 256: //DOWN
+                                keyMap[kp.key] = true;
+                                break;
+                            case (int) 257: //UP
+                                keyMap[kp.key] = false;
+                                break;
                         }
                         if (onSlave == 0) continue;
 
@@ -173,7 +178,10 @@ namespace Harmony {
                         break;
                 }
 
-                _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
+                var message = JsonConvert.SerializeObject(hp);
+                Debug.WriteLine(message);
+
+                _tx.WriteLine(Crypto.Encrypt(message));
             }
         }
 
@@ -250,30 +258,11 @@ namespace Harmony {
 
                         if (d.OwnDisplay) {
                             //TODO: Show Mouse when hidden
-                            //var input = new MouseHook.MouseInput() {
-                            //    DwType = 1,
-                            //    Mstruct = new MouseHook.Msllhookstruct()
-                            //    {
-                            //        x = mp.PosX,
-                            //        y = mp.PosY,
-                            //        flags = mp.Flags,
-                            //        mouseData = mp.MouseData,
-                            //        //dwExtraInfo = (IntPtr) mp.DwExtraInfo
-                            //    }
-                            //};
-
-                            //var inputArr = new MouseHook.MouseInput[]
-                            //{
-                            //    input
-                            //};
-
-                            if (mp.wParam == 0x0200) { //Move
+                            if (mp.Action == (uint) MouseFlag.Move) { //Move
                                 SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
-                                //mouse_event(0x8000, mp.PosX, mp.PosY, (int)mp.MouseData, mp.DwExtraInfo);
                             } else {
-                                //mouse_event(mp.wParam, 0, 0, (int)mp.MouseData, mp.DwExtraInfo);
+                                Mouse.sendInput(mp);
                             }
-                            //SendInput(1, inputArr, Marshal.SizeOf(input));
 
                         } else {
                             //TODO: Hide Mouse
@@ -283,64 +272,48 @@ namespace Harmony {
 
                     case HarmonyPacket.PacketType.KeyBoardPacket:
                         var kp = ((JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
+                        Keyboard.SendInput(kp);
 
-                        //var kinput = new KeyboardHook.KeyboardInput()
-                        //{
-                        //    DwType = 0,
-                        //    Mstruct = new KeyboardHook.KEYBDINPUT()
-                        //    {
-                        //        dwFlags = (uint) kp.wParam,
-                        //        wVk = (ushort) kp.key,
-                        //        wScan = 0,
+                        //if (kp.wParam == 256) {
 
+                        //    if (Keys.Control == kp.key || Keys.ControlKey == kp.key || Keys.LControlKey == kp.key || Keys.RControlKey == kp.key
+                        //        || Keys.Alt == kp.key || Keys.LMenu == kp.key || Keys.RMenu == kp.key
+                        //        || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key
+                        //        || Keys.LWin == kp.key || Keys.RWin == kp.key) {
+                        //        break;
                         //    }
-                        //};
-                        //var kinputArr = new KeyboardHook.KeyboardInput[]
-                        //{
-                        //    kinput
-                        //};
-                        //SendInput(1, kinputArr, Marshal.SizeOf(kinput));
 
-                        if (kp.wParam == (int)KeyboardHook.KeyEvent.WM_KEYDOWN) {
+                        //    var k = kp.key.ToString().ToUpper();
+                        //    switch (kp.key) { //TODO: Add special characters
+                        //        case Keys.Back:
+                        //            k = "BACKSPACE";
+                        //            break;
+                        //        case Keys.Space:
+                        //            k = " ";
+                        //            break;
+                        //        case Keys.Return:
+                        //            k = "ENTER";
+                        //            break;
+                        //    }
 
-                            if (Keys.Control == kp.key || Keys.ControlKey == kp.key || Keys.LControlKey == kp.key || Keys.RControlKey == kp.key
-                                || Keys.Alt == kp.key || Keys.LMenu == kp.key || Keys.RMenu == kp.key
-                                || Keys.Shift == kp.key || Keys.ShiftKey == kp.key || Keys.LShiftKey == kp.key || Keys.RShiftKey == kp.key
-                                || Keys.LWin == kp.key || Keys.RWin == kp.key) {
-                                break;
-                            }
-
-                            var k = kp.key.ToString().ToUpper();
-                            switch (kp.key) { //TODO: Add special characters
-                                case Keys.Back:
-                                    k = "BACKSPACE";
-                                    break;
-                                case Keys.Space:
-                                    k = " ";
-                                    break;
-                                case Keys.Return:
-                                    k = "ENTER";
-                                    break;
-                            }
-
-                            if (k.StartsWith("OEM")) break;
-                            var key = "";
-                            if (kp.key.ToString().Length > 1 && k.Length > 1) {
-                                key += "{" + k + "}";
-                            } else {
-                                key = k.ToLower();
-                            }
-                            if ((kp.pressedKeys & 4) != 0) {
-                                key = "+" + key;
-                            }
-                            if ((kp.pressedKeys & 2) != 0) {
-                                key = "%" + key;
-                            }
-                            if ((kp.pressedKeys & 1) != 0) {
-                                key = "^" + key;
-                            }
-                            SendKeys.SendWait(key);
-                        }
+                        //    if (k.StartsWith("OEM")) break;
+                        //    var key = "";
+                        //    if (kp.key.ToString().Length > 1 && k.Length > 1) {
+                        //        key += "{" + k + "}";
+                        //    } else {
+                        //        key = k.ToLower();
+                        //    }
+                        //    if ((kp.pressedKeys & 4) != 0) {
+                        //        key = "+" + key;
+                        //    }
+                        //    if ((kp.pressedKeys & 2) != 0) {
+                        //        key = "%" + key;
+                        //    }
+                        //    if ((kp.pressedKeys & 1) != 0) {
+                        //        key = "^" + key;
+                        //    }
+                        //    SendKeys.SendWait(key);
+                        //}
                         break;
 
                     case HarmonyPacket.PacketType.DisplayPacket:
@@ -349,15 +322,6 @@ namespace Harmony {
                 }
             }
         }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint SendInput(uint cInputs, MouseHook.MouseInput[] input, int size); //Does not work (currently)
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint SendInput(uint cInputs, KeyboardHook.KeyboardInput[] input, int size); //Does not work (currently)
-
-        [DllImport("user32.dll")]
-        private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo); //Does not work (currently)
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

@@ -69,10 +69,20 @@
     <ManifestTimestampUrl>http://timestamp.apple.com/ts01</ManifestTimestampUrl>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>71186BD2FB0C1E778D02EE4600E09C8CDA69044B</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>297D181A5FC9277FE083D9EEA6CF0995FE07E77E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Harmony.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -102,6 +112,10 @@
     </ApplicationDefinition>
     <Compile Include="Crypto.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="Windows\INPUT.cs" />
+    <Compile Include="Windows\Keyboard.cs" />
+    <Compile Include="Windows\Mouse.cs" />
+    <Compile Include="Windows\NativeMethods.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -112,14 +126,12 @@
     </Compile>
     <Compile Include="DisplayManager.cs" />
     <Compile Include="HarmonyPacket.cs" />
-    <Compile Include="KeyboardHook.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MouseHook.cs" />
     <Compile Include="NetworkCommunicator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -140,6 +152,7 @@
     </EmbeddedResource>
     <None Include="Notes\Harmony-Protocol.vpd" />
     <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -160,5 +173,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
