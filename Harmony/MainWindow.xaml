@@ -8,10 +8,13 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Button Name="StartButton" Content="Start" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120" Click="OnClickStart" ClickMode="Release"/>
-        <CheckBox Name="MasterCheckBox" Content="isMaster" HorizontalAlignment="Left" Margin="14,35,0,0" VerticalAlignment="Top"/>
-        <TextBox Name="IPInput" HorizontalAlignment="Left" Height="23" Margin="10,55,0,0" TextWrapping="Wrap" Text="localhost" VerticalAlignment="Top" Width="120"/>
-        <TextBox Name="PortInput" HorizontalAlignment="Left" Height="23" Margin="10,83,0,0" TextWrapping="Wrap" Text="55555" VerticalAlignment="Top" Width="120"/>
+        <CheckBox Name="MasterCheckBox" Content="is Master" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
+        <TextBox Name="IPInput" HorizontalAlignment="Left" Height="23" Margin="10,75,0,0" TextWrapping="Wrap" Text="localhost" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="PortInput" HorizontalAlignment="Left" Height="23" Margin="10,115,0,0" TextWrapping="Wrap" Text="55555" VerticalAlignment="Top" Width="120"/>
         <TextBox Name="Debug" HorizontalAlignment="Left" Margin="166,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="399" Width="616"/>
-        <PasswordBox Name="PasswordInput" HorizontalAlignment="Left" Margin="10,111,0,0" Width="120" Password="secretPassword" Height="23" VerticalAlignment="Top"/>
+        <PasswordBox Name="PasswordInput" HorizontalAlignment="Left" Margin="10,155,0,0" Width="120" Password="secretPassword" Height="23" VerticalAlignment="Top"/>
+        <Label Content="IP-Address:" HorizontalAlignment="Left" Margin="4,55,0,0" VerticalAlignment="Top"/>
+        <Label Content="Port:" HorizontalAlignment="Left" Margin="4,95,0,0" VerticalAlignment="Top"/>
+        <Label Content="Password:" HorizontalAlignment="Left" Margin="4,135,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>
