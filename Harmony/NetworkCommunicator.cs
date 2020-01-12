@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -23,13 +23,13 @@ namespace Harmony {
 
         private readonly Thread _communicationThread;
 
-        public static volatile int onSlave = 0;
+        public static volatile int onSlave;
 
         public NetworkCommunicator(string address, int port, bool isMaster) {
             if (Instance != null) return;
-            this._address = address;
-            this._port = port;
-            _communicationThread = isMaster ? new Thread(new ThreadStart(PackAndSend)) : new Thread(new ThreadStart(ListenAndUnpack));
+            _address = address;
+            _port = port;
+            _communicationThread = isMaster ? new Thread(PackAndSend) : new Thread(ListenAndUnpack);
 
             _blockingCollection = new BlockingCollection<HarmonyPacket>();
             _communicationThread.Start();
@@ -63,7 +63,7 @@ namespace Harmony {
             _tx.WriteLine(JsonConvert.SerializeObject(saltPacket));
             MainWindow.Log("Send Salt-Packet!", false);
 
-            var keyMap = new System.Collections.Generic.Dictionary<Keys, bool>();
+            var keyMap = new Dictionary<Keys, bool>();
             foreach (Keys key in Enum.GetValues(typeof(Keys))) {
                 keyMap[key] = false;
             }
@@ -106,81 +106,46 @@ namespace Harmony {
 
             while (true) {
                 var hp = _blockingCollection.Take();
-                switch (hp.Type) {
-                    case HarmonyPacket.PacketType.KeyBoardPacket:
-                        var kp = (HarmonyPacket.KeyboardPacket) hp.Pack;
-                        switch (kp.wParam) {
-                            case (int) 256: //DOWN
-                                keyMap[kp.key] = true;
-                                break;
-                            case (int) 257: //UP
-                                keyMap[kp.key] = false;
-                                break;
-                        }
-                        if (onSlave == 0) continue;
+                if (hp.Type == HarmonyPacket.PacketType.MousePacket) {
+                    var mp = (HarmonyPacket.MousePacket) hp.Pack;
 
-                        if (keyMap[Keys.Control] || keyMap[Keys.ControlKey] || keyMap[Keys.LControlKey] || keyMap[Keys.RControlKey]) {
-                            kp.pressedKeys |= 1;
+                    if (onSlave == 0) {
+                        var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
+                        if (onScreen == null) continue;
+                        mouseX = mp.PosX;
+                        mouseY = mp.PosY;
+                        if (onScreen.OwnDisplay) {
+                            mouseMX = mp.PosX;
+                            mouseMY = mp.PosY;
+                            continue;
                         }
 
-                        if (keyMap[Keys.Alt] || keyMap[Keys.LMenu] || keyMap[Keys.RMenu]) {
-                            kp.pressedKeys |= 2;
+                        //TODO: Hide Mouse
+                        onSlave = 1;
+                    }
+                    else {
+                        mouseX += mp.PosX - mouseMX;
+                        mouseY += mp.PosY - mouseMY;
+                        var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
+                        if (onScreen == null) {
+                            mouseX -= mp.PosX - mouseMX;
+                            mouseY -= mp.PosY - mouseMY;
+                            continue;
                         }
 
-                        if (keyMap[Keys.Shift] || keyMap[Keys.ShiftKey] || keyMap[Keys.LShiftKey] ||
-                            keyMap[Keys.RShiftKey]) {
-                            kp.pressedKeys |= 4;
-                        }
-
-                        if (keyMap[Keys.LWin] || keyMap[Keys.RWin]) {
-                            kp.pressedKeys |= 8;
-                        }
-                        break;
-                    case HarmonyPacket.PacketType.MousePacket:
-                        var mp = (HarmonyPacket.MousePacket) hp.Pack;
-
-                        if (onSlave == 0) {
-                            var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
-                            if (onScreen == null) continue;
-                            mouseX = mp.PosX;
-                            mouseY = mp.PosY;
-                            if (onScreen.OwnDisplay) {
-                                mouseMX = mp.PosX;
-                                mouseMY = mp.PosY;
-                                continue;
-                            }
-                            else {
-                                //TODO: Hide Mouse
-                                onSlave = 1;
-                            }
+                        if (onScreen.OwnDisplay) {
+                            //TODO: Set Mouse Position of Master
+                            //TODO: Show Mouse
+                            onSlave = 0;
                         }
                         else {
-                            mouseX += mp.PosX - mouseMX;
-                            mouseY += mp.PosY - mouseMY;
-                            var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
-                            if (onScreen == null) {
-                                mouseX -= mp.PosX - mouseMX;
-                                mouseY -= mp.PosY - mouseMY;
-                                continue;
-                            }
-
-                            if (onScreen.OwnDisplay) {
-                                //TODO: Set Mouse Position of Master
-                                //TODO: Show Mouse
-                                onSlave = 0;
-                            }
-                            else {
-                                mp.PosX = mouseX;
-                                mp.PosY = mouseY;
-                            }
+                            mp.PosX = mouseX;
+                            mp.PosY = mouseY;
                         }
-                        break;
+                    }
                 }
 
-                var message = JsonConvert.SerializeObject(hp);
-                Debug.WriteLine(message);
-
-                _tx.WriteLine(Crypto.Encrypt(message));
+                _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
         }
 
@@ -263,10 +228,8 @@ namespace Harmony {
                                 Mouse.SendInput(mp);
                             }
 
-                        } else {
-                            //TODO: Hide Mouse
-
                         }
+
                         break;
 
                     case HarmonyPacket.PacketType.KeyBoardPacket:
@@ -282,7 +245,7 @@ namespace Harmony {
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
                 socket.Connect("8.8.8.8", 65530);
                 var endPoint = socket.LocalEndPoint as IPEndPoint;
-                localIP = endPoint.Address.ToString();
+                localIP = endPoint?.Address.ToString();
             }
 
             return localIP;

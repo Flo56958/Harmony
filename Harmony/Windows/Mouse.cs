@@ -58,7 +58,7 @@ namespace Harmony.Windows {
                     Data = new MOUSEKEYBOARDINPUT() {
                         Mouse = new MOUSEINPUT() {
                             Flags = mp.Flags | mp.Action,
-                            MouseData = (mp.MouseData == 7864320) ? 1 * 120 : unchecked((uint) (-1 * 120)),
+                            MouseData = (mp.MouseData == 7864320) ? 1 * 120 : unchecked((uint) (-1 * 120)), //one Click up or down times WheelDelta (120)
                         }
                     }
                 };

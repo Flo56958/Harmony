@@ -97,7 +97,6 @@ namespace Harmony.Windows {
                 Pack = new HarmonyPacket.KeyboardPacket() {
                     wParam = wParam.ToInt32(),
                     key = (Keys)Marshal.ReadInt32(lParam),
-                    pressedKeys = 0
                 }
             });
 

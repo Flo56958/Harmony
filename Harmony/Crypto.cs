@@ -44,7 +44,6 @@ namespace Harmony {
                     }
                 }
             }
-
         }
 
         internal static string Decrypt(string cipherText) {
