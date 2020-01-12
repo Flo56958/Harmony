@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Security;
 using System.Windows;
 using Harmony.Windows;
 
@@ -9,24 +9,25 @@ namespace Harmony
 
         private static MainWindow _window;
 
-        public static string Password;
+        public static SecureString Password;
 
         public MainWindow()
         {
             InitializeComponent();
             _window = this;
-            Log($"The IP-Address of this maschine is { NetworkCommunicator.GetLocalIPAddress() }", false);
+            Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
-            if(!_started) { 
+            var isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
+            if (!_started) { 
                 var ip = IPInput.Text;
                 var port = PortInput.Text;
 
                 if (!int.TryParse(port, out var iport)) return;
-                var isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
-                Password = PasswordInput.Text;
+                Password = PasswordInput.SecurePassword;
+                Log(Crypto.SecureStringToString(Password), false);
 
                 var networkCommunicator = new NetworkCommunicator(ip, iport, isMaster);
                 if (NetworkCommunicator.Instance == null) return;
@@ -43,6 +44,11 @@ namespace Harmony
                 if (NetworkCommunicator.Instance != null) {
                     NetworkCommunicator.Instance.Close();
                     NetworkCommunicator.Instance = null;
+                }
+
+                if (isMaster) {
+                    MouseHook.Stop();
+                    KeyboardHook.Stop();
                 }
                 
                 _started = false;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -11,17 +13,17 @@ namespace Harmony {
 
         private static byte[] derivedPass;
 
-        public static void Init(byte[] salt, string passPhrase) {
-            derivedPass = new Rfc2898DeriveBytes(passPhrase, salt, DerivationIterations).GetBytes(Keysize / 8);
+        internal static void Init(byte[] salt, SecureString passPhrase) {
+            derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
         }
 
-        public static byte[] Init(string passPhrase) {
+        internal static byte[] Init(SecureString passPhrase) {
             var salt = Generate256BitsOfRandomEntropy();
-            derivedPass = new Rfc2898DeriveBytes(passPhrase, salt, DerivationIterations).GetBytes(Keysize / 8);
+            derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
             return salt;
         }
 
-        public static string Encrypt(string plainText) {
+        internal static string Encrypt(string plainText) {
             var bytes = Encoding.UTF8.GetBytes(plainText);
             var iv = Generate256BitsOfRandomEntropy();
 
@@ -45,7 +47,7 @@ namespace Harmony {
 
         }
 
-        public static string Decrypt(string cipherText) {
+        internal static string Decrypt(string cipherText) {
             var bytes = Convert.FromBase64String(cipherText);
             var data = bytes.Skip(Keysize / 8).Take(bytes.Length - Keysize / 8).ToArray();
             var iv = bytes.Take(Keysize / 8).ToArray();
@@ -73,6 +75,16 @@ namespace Harmony {
                 rngCsp.GetBytes(randomBytes);
             }
             return randomBytes;
+        }
+
+        internal static string SecureStringToString(SecureString value) {
+            var valuePtr = IntPtr.Zero;
+            try {
+                valuePtr = Marshal.SecureStringToGlobalAllocUnicode(value);
+                return Marshal.PtrToStringUni(valuePtr);
+            } finally {
+                Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
+            }
         }
     }
 }
