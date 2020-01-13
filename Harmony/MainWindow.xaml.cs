@@ -61,5 +61,11 @@ namespace Harmony
                 _window.Debug.AppendText("\n" + err + message);
             });
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
+            MouseHook.Stop();
+            KeyboardHook.Stop();
+            NetworkCommunicator.Instance.Close();
+        }
     }
 }
