@@ -13,13 +13,9 @@ namespace Harmony {
 
         private static byte[] _derivedPass;
 
-        internal static void Init(byte[] salt, SecureString passPhrase) {
-            _derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
-        }
-
-        internal static byte[] Init(SecureString passPhrase) {
-            var salt = Generate256BitsOfRandomEntropy();
-            _derivedPass = new Rfc2898DeriveBytes(SecureStringToString(passPhrase), salt, DerivationIterations).GetBytes(Keysize / 8);
+        internal static byte[] Init(SecureString passPhrase, byte[] salt = null) {
+            if (salt == null) salt = Generate256BitsOfRandomEntropy();
+            _derivedPass = new Rfc2898DeriveBytes(new System.Net.NetworkCredential(string.Empty, passPhrase).Password, salt, DerivationIterations).GetBytes(Keysize / 8);
             return salt;
         }
 
@@ -74,16 +70,6 @@ namespace Harmony {
                 rngCsp.GetBytes(randomBytes);
             }
             return randomBytes;
-        }
-
-        internal static string SecureStringToString(SecureString value) {
-            var valuePtr = IntPtr.Zero;
-            try {
-                valuePtr = Marshal.SecureStringToGlobalAllocUnicode(value);
-                return Marshal.PtrToStringUni(valuePtr);
-            } finally {
-                Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
-            }
         }
     }
 }

@@ -173,7 +173,7 @@ namespace Harmony {
                 tcpIn.Stop();
                 return;
             }
-            Crypto.Init(Convert.FromBase64String(saltPacketReal.Pack), MainWindow.Password);
+            Crypto.Init(MainWindow.Password, Convert.FromBase64String(saltPacketReal.Pack));
             MainWindow.Log("Successfully obtained Salt-Packet!", false);
 
             _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket
