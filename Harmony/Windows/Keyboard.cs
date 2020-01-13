@@ -52,7 +52,7 @@ namespace Harmony.Windows {
                     }
                 };
             }
-            else {
+            else { //Up: should be 257
                 input = new INPUT {
                     Type = InputType.Keyboard,
                     Data = new MOUSEKEYBOARDINPUT() {
@@ -70,7 +70,6 @@ namespace Harmony.Windows {
 
     public static class KeyboardHook {
 
-        private const int WH_KEYBOARD_LL = 13;
         private static NativeMethods.HookProc _proc = HookCallback;
         private static IntPtr _hookId = IntPtr.Zero;
 
@@ -85,13 +84,11 @@ namespace Harmony.Windows {
         private static IntPtr SetHook(NativeMethods.HookProc proc) {
             using (var curProcess = Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule) {
-                return NativeMethods.SetWindowsHookEx(WH_KEYBOARD_LL, proc,
-                    NativeMethods.GetModuleHandle(curModule?.ModuleName), 0);
+                return NativeMethods.SetWindowsHookEx(13, proc, NativeMethods.GetModuleHandle(curModule?.ModuleName), 0);
             }
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
-
             NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket() {
                 Type = HarmonyPacket.PacketType.KeyBoardPacket,
                 Pack = new HarmonyPacket.KeyboardPacket() {

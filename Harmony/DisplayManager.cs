@@ -6,17 +6,17 @@ using System.Windows.Forms;
 namespace Harmony {
     public class DisplayManager {
 
-        public static List<Display> displays { get; set; }
+        public static List<Display> Displays { get; set; }
 
-        public static Display slaveMain { get; set; }
+        public static Display SlaveMain { get; set; }
 
         //SetUp-Function for Slave and Master
         public static void SetUp() {
             var screens = Screen.AllScreens;
-            displays = new List<Display>();
+            Displays = new List<Display>();
 
             foreach (var scr in screens) {
-                displays.Add(new Display()
+                Displays.Add(new Display()
                 {
                     Screen = scr.Bounds, 
                     OwnDisplay = true,
@@ -24,24 +24,24 @@ namespace Harmony {
                 });
             }
 
-            displays.Sort((d1, d2) => d1.Location.X - d2.Location.X);
+            Displays.Sort((d1, d2) => d1.Location.X - d2.Location.X);
             PrintScreenConfiguration();
         }
 
         //Additional SetUp-Function for Slave
         public static void SetUp(List<Display> displ) {
-            displays = new List<Display>();
+            Displays = new List<Display>();
             foreach (var d in displ) {
                 d.OwnDisplay = !d.OwnDisplay;
-                if (d.OwnDisplay && d.Screen.Location.X == 0 && d.Screen.Location.Y == 0) slaveMain = d;
-                displays.Add(d);
+                if (d.OwnDisplay && d.Screen.Location.X == 0 && d.Screen.Location.Y == 0) SlaveMain = d;
+                Displays.Add(d);
             }
         }
 
         public static void AddRight(Display display) {
-            var left = displays[displays.Count - 1];
+            var left = Displays[Displays.Count - 1];
             display.Location = new Point(left.Location.X + left.Screen.Width, left.Location.Y);
-            displays.Add(display);
+            Displays.Add(display);
         }
 
         public static bool IsPointInHarmonySpace(int x, int y) {
@@ -49,13 +49,13 @@ namespace Harmony {
         }
 
         public static Display GetDisplayFromPoint(int x, int y) {
-            return displays.FirstOrDefault(dis => x >= dis.Location.X && x < dis.Location.X + dis.Screen.Width && y >= dis.Location.Y && y < dis.Location.Y + dis.Screen.Height);
+            return Displays.FirstOrDefault(dis => x >= dis.Location.X && x < dis.Location.X + dis.Screen.Width && y >= dis.Location.Y && y < dis.Location.Y + dis.Screen.Height);
         }
 
         public static void PrintScreenConfiguration() {
             var count = 0;
             MainWindow.Log("Current Screen-Configuration:", false);
-            foreach (var dis in displays) {
+            foreach (var dis in Displays) {
                 var b = (dis.OwnDisplay) ? "own" : "foreign";
                 MainWindow.Log($"Screen {count++},{b}: X:{dis.Screen.Size.Width}, Y:{dis.Screen.Size.Height}, Pos: {dis.Location}", false);
             }

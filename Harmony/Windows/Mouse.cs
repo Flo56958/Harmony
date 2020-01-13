@@ -20,30 +20,32 @@ namespace Harmony.Windows {
         Absolute = 0x8000,
     }
 
-    public static class Mouse {
+    public static class Mouse {                                                                                                                                                               
 
         public static uint MapWParamToFlags(int wParam) {
             switch (wParam) {
-                case 512:
+                case 0x200:
                     return (uint)MouseFlag.Move;
-                case 513:
+                case 0x201:
                     return (uint)MouseFlag.LeftDown;
-                case 514:
+                case 0x202:
                     return (uint)MouseFlag.LeftUp;
-                case 516:
+                case 0x204:
                     return (uint)MouseFlag.RightDown;
-                case 517:
+                case 0x205:
                     return (uint)MouseFlag.RightUp;
-                case 519:
+                case 0x207:
                     return (uint)MouseFlag.MiddleDown;
-                case 520:
+                case 0x208:
                     return (uint)MouseFlag.MiddleUp;
-                case 522:
-                    return (uint)MouseFlag.VerticalWheel; //TODO: Find option to map MouseWheel
-                case 523:
-                    return 0; //TODO: Find option to map Mouse Back Down
-                case 524:
-                    return 0; //TODO: Find option to map Mouse Back Up
+                case 0x20A:
+                    return (uint)MouseFlag.VerticalWheel;
+                case 0x20B:
+                    return (uint)MouseFlag.XDown;
+                case 0x20C:
+                    return (uint)MouseFlag.XUp;
+                case 0x20E:
+                    return (uint)MouseFlag.HorizontalWheel;
             }
 
             return 0;
@@ -52,17 +54,19 @@ namespace Harmony.Windows {
         public static bool SendInput(HarmonyPacket.MousePacket mp) {
             INPUT input;
             if (mp.Action == 0) return false;
-            else if (mp.Action == (ulong) MouseFlag.VerticalWheel) {
+            else if (mp.Action == (uint)MouseFlag.VerticalWheel || mp.Action == (uint)MouseFlag.HorizontalWheel
+                || mp.Action == (uint)MouseFlag.XDown || mp.Action == (uint)MouseFlag.XUp) {
                 input = new INPUT() {
                     Type = InputType.Mouse,
                     Data = new MOUSEKEYBOARDINPUT() {
                         Mouse = new MOUSEINPUT() {
                             Flags = mp.Flags | mp.Action,
-                            MouseData = (mp.MouseData == 7864320) ? 1 * 120 : unchecked((uint) (-1 * 120)), //one Click up or down times WheelDelta (120)
+                            MouseData = (uint)(short)(mp.MouseData >> 16),
                         }
                     }
                 };
-            } else {
+            }
+            else {
                 input = new INPUT() {
                     Type = InputType.Mouse,
                     Data = new MOUSEKEYBOARDINPUT() {
@@ -79,7 +83,8 @@ namespace Harmony.Windows {
 
     public static class MouseHook {
 
-        private const int WH_MOUSE_LL = 14;
+        private static readonly NativeMethods.HookProc Proc = HookCallback;
+        private static IntPtr _hookId = IntPtr.Zero;
 
         public static void Start() {
             _hookId = SetHook(Proc);
@@ -89,13 +94,10 @@ namespace Harmony.Windows {
             NativeMethods.UnhookWindowsHookEx(_hookId);
         }
 
-        private static readonly NativeMethods.HookProc Proc = HookCallback;
-        private static IntPtr _hookId = IntPtr.Zero;
-
         private static IntPtr SetHook(NativeMethods.HookProc proc) {
             using (var curProcess = Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule) {
-                return NativeMethods.SetWindowsHookEx(WH_MOUSE_LL, proc, NativeMethods.GetModuleHandle(curModule.ModuleName), 0);
+                return NativeMethods.SetWindowsHookEx(14, proc, NativeMethods.GetModuleHandle(curModule.ModuleName), 0);
             }
         }
 

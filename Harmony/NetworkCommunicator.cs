@@ -85,7 +85,7 @@ namespace Harmony {
 
             var displays = ((JObject)displayPacketReal.Pack).ToObject<HarmonyPacket.DisplayPacket>();
             foreach (var dis in displays.screens) {
-                if (dis.Screen.Location.X == 0 && dis.Screen.Location.Y == 0) DisplayManager.slaveMain = dis;
+                if (dis.Screen.Location.X == 0 && dis.Screen.Location.Y == 0) DisplayManager.SlaveMain = dis;
                 dis.OwnDisplay = false;
                 DisplayManager.AddRight(dis);
             }
@@ -93,7 +93,7 @@ namespace Harmony {
             _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.DisplayPacket,
                 Pack = new HarmonyPacket.DisplayPacket {
-                    screens = DisplayManager.displays
+                    screens = DisplayManager.Displays
                 }
             })));
             MainWindow.Log("Finished Handshake with Slave!", false);
@@ -107,7 +107,7 @@ namespace Harmony {
             while (true) {
                 var hp = _blockingCollection.Take();
                 if (hp.Type == HarmonyPacket.PacketType.MousePacket) {
-                    var mp = (HarmonyPacket.MousePacket) hp.Pack;
+                    var mp = (HarmonyPacket.MousePacket)hp.Pack;
 
                     if (onSlave == 0) {
                         var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
@@ -120,7 +120,6 @@ namespace Harmony {
                             continue;
                         }
 
-                        //TODO: Hide Mouse
                         onSlave = 1;
                     }
                     else {
@@ -134,16 +133,16 @@ namespace Harmony {
                         }
 
                         if (onScreen.OwnDisplay) {
-                            //TODO: Set Mouse Position of Master
-                            //TODO: Show Mouse
+                            NativeMethods.SetCursorPos(mouseX, mouseY);
                             onSlave = 0;
                         }
-                        else {
-                            mp.PosX = mouseX;
-                            mp.PosY = mouseY;
-                        }
+                        mp.PosX = mouseX;
+                        mp.PosY = mouseY;
+
                     }
                 }
+
+                if (onSlave == 0) continue;
 
                 _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
@@ -176,17 +175,15 @@ namespace Harmony {
             Crypto.Init(MainWindow.Password, Convert.FromBase64String(saltPacketReal.Pack));
             MainWindow.Log("Successfully obtained Salt-Packet!", false);
 
-            _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket
-            {
+            _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.DisplayPacket,
-                Pack = new HarmonyPacket.DisplayPacket
-                {
-                    screens = DisplayManager.displays
+                Pack = new HarmonyPacket.DisplayPacket {
+                    screens = DisplayManager.Displays
                 }
             })));
             MainWindow.Log("Send Display-Packet!", false);
 
-            var displayPacket= Crypto.Decrypt(_rx.ReadLine());
+            var displayPacket = Crypto.Decrypt(_rx.ReadLine());
             if (displayPacket == null) {
                 MainWindow.Log("Did not receive Display-Packet!", true);
                 tcpInClient.Close();
@@ -215,16 +212,17 @@ namespace Harmony {
 
                 switch (packet.Type) {
                     case HarmonyPacket.PacketType.MousePacket:
-                        var mp = ((JObject) packet.Pack).ToObject<HarmonyPacket.MousePacket>();
+                        var mp = ((JObject)packet.Pack).ToObject<HarmonyPacket.MousePacket>();
 
                         var d = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
                         if (d == null) continue;
 
                         if (d.OwnDisplay) {
                             //TODO: Show Mouse when hidden
-                            if (mp.Action == (uint) MouseFlag.Move) { //Move
-                                NativeMethods.SetCursorPos(mp.PosX - DisplayManager.slaveMain.Location.X, mp.PosY - DisplayManager.slaveMain.Location.Y); //Needs Elevation!!
-                            } else {
+                            if (mp.Action == (uint)MouseFlag.Move) { //Move
+                                NativeMethods.SetCursorPos(mp.PosX - DisplayManager.SlaveMain.Location.X, mp.PosY - DisplayManager.SlaveMain.Location.Y); //Needs Elevation!!
+                            }
+                            else {
                                 Mouse.SendInput(mp);
                             }
 

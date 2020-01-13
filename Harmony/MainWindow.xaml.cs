@@ -21,7 +21,7 @@ namespace Harmony
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
             var isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
-            if (!_started) { 
+            if (!_started) {
                 var ip = IPInput.Text;
                 var port = PortInput.Text;
 
@@ -49,7 +49,7 @@ namespace Harmony
                     MouseHook.Stop();
                     KeyboardHook.Stop();
                 }
-                
+
                 _started = false;
                 StartButton.Content = "Start";
             }
@@ -65,7 +65,7 @@ namespace Harmony
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             MouseHook.Stop();
             KeyboardHook.Stop();
-            NetworkCommunicator.Instance.Close();
+            NetworkCommunicator.Instance?.Close();
         }
     }
 }
