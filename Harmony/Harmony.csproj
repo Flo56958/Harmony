@@ -111,11 +111,18 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Crypto.cs" />
+    <Compile Include="DisplayManagerWindow.xaml.cs">
+      <DependentUpon>DisplayManagerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="Windows\INPUT.cs" />
     <Compile Include="Windows\Keyboard.cs" />
     <Compile Include="Windows\Mouse.cs" />
     <Compile Include="Windows\NativeMethods.cs" />
+    <Page Include="DisplayManagerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

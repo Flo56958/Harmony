@@ -8,6 +8,7 @@ namespace Harmony
         private bool _started = false;
 
         private static MainWindow _window;
+        private static DisplayManagerWindow _displayManagerWindow;
 
         public static SecureString Password;
 
@@ -17,6 +18,7 @@ namespace Harmony
             _window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
+            _displayManagerWindow = new DisplayManagerWindow();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
@@ -36,6 +38,7 @@ namespace Harmony
                 }
 
                 StartButton.Content = "Stop";
+                OpenDisplayButton.IsEnabled = true;
 
                 _started = true;
             }
@@ -50,9 +53,16 @@ namespace Harmony
                     KeyboardHook.Stop();
                 }
 
+                DisplayManager.SetUp(); //Reload DisplayManager
+
                 _started = false;
                 StartButton.Content = "Start";
+                OpenDisplayButton.IsEnabled = false;
             }
+        }
+
+        private void OnClickDisplayManager(object sender, RoutedEventArgs e) {
+            _displayManagerWindow.Show();
         }
 
         public static void Log(string message, bool error) {
@@ -66,6 +76,7 @@ namespace Harmony
             MouseHook.Stop();
             KeyboardHook.Stop();
             NetworkCommunicator.Instance?.Close();
+            _displayManagerWindow.Close();
         }
     }
 }

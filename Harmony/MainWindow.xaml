@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Harmony"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
+        Title="Harmony" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
         <Button Name="StartButton" Content="Start" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120" Click="OnClickStart" ClickMode="Release"/>
         <CheckBox Name="MasterCheckBox" Content="is Master" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
@@ -16,5 +16,6 @@
         <Label Content="IP-Address:" HorizontalAlignment="Left" Margin="4,55,0,0" VerticalAlignment="Top"/>
         <Label Content="Port:" HorizontalAlignment="Left" Margin="4,95,0,0" VerticalAlignment="Top"/>
         <Label Content="Password:" HorizontalAlignment="Left" Margin="4,135,0,0" VerticalAlignment="Top"/>
+        <Button Name="OpenDisplayButton" Content="Open Display Manager" HorizontalAlignment="Left" Margin="10,389,0,0" VerticalAlignment="Top" Width="120" Click="OnClickDisplayManager" ClickMode="Release" IsEnabled="True"/>
     </Grid>
 </Window>
