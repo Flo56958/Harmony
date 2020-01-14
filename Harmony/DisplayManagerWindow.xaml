@@ -8,11 +8,7 @@
         mc:Ignorable="d"
         Title="Harmony - Display Manager" Height="450" Width="800">
     <Grid>
-        <Canvas x:Name="DisplayCanvas" HorizontalAlignment="Left" Height="370" Margin="10,10,0,0" VerticalAlignment="Top" Width="772">
-            <Canvas.DataContext>
-                <Rectangle/>
-            </Canvas.DataContext>
-        </Canvas>
+        <Canvas x:Name="DisplayCanvas" Opacity="100" HorizontalAlignment="Left" Height="370" Margin="10,10,0,0" VerticalAlignment="Top" Width="772"/>
         <Button x:Name="SaveButton" Content="Save Configuration" HorizontalAlignment="Left" Margin="10,391,0,0" VerticalAlignment="Top" Width="120" Click="OnClickSave" ClickMode="Release"/>
         <Button x:Name="UpdateButton" Content="Update Configuration" HorizontalAlignment="Left" Margin="148,391,0,0" VerticalAlignment="Top" Width="120" Click="OnClickUpdate" ClickMode="Release"/>
     </Grid>

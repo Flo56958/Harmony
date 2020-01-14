@@ -19,31 +19,29 @@ namespace Harmony {
         }
 
         private void OnClickUpdate(object sender, RoutedEventArgs e) {
-            Debug.WriteLine("Click");
             var shrink = 20;
-            DisplayCanvas.IsEnabled = true;
-            DisplayCanvas.Visibility = Visibility.Visible;
             DisplayCanvas.Children.Clear();
-            var width = DisplayCanvas.Width;
-            var height = DisplayCanvas.Height;
+            var width = DisplayCanvas.Width / 2;
+            var height = DisplayCanvas.Height / 2;
 
             var displays = DisplayManager.Displays;
 
-            foreach(DisplayManager.Display dis in displays) {
-                Rectangle rect = new Rectangle();
-                rect.Width = dis.Screen.X / shrink;
-                rect.Height = dis.Screen.Y / shrink;
+            foreach (DisplayManager.Display dis in displays) {
+                Debug.WriteLine(dis.ToString());
+                Rectangle recti = new Rectangle {
+                    Width = dis.Screen.Width / shrink,
+                    Height = dis.Screen.Height / shrink,
 
-                rect.StrokeThickness = 2;
+                    StrokeThickness = 2,
 
-                rect.Stroke = new SolidColorBrush(Color.FromArgb(0, 0, 255, 0));
-                rect.Fill = new SolidColorBrush(dis.OwnDisplay ? Color.FromArgb(0, 255, 0, 0) : Color.FromArgb(255, 0, 0, 0));
-                Canvas.SetLeft(rect, 0);//dis.Location.X / shrink + width);
-                Canvas.SetTop(rect, 0);//dis.Location.Y / shrink + height);
-                DisplayCanvas.Children.Add(rect);
+                    Stroke = Brushes.Black,
+                    Fill = dis.OwnDisplay ? Brushes.CadetBlue : Brushes.Red
+                };
+                Canvas.SetLeft(recti, dis.Location.X / shrink + width);
+                Canvas.SetTop(recti, dis.Location.Y / shrink + height);
+                var i = DisplayCanvas.Children.Add(recti);
+                Debug.WriteLine(i);
             }
-
-            DisplayCanvas.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
         }
     }
 }
