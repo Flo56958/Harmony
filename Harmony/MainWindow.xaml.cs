@@ -1,14 +1,18 @@
-﻿using System.Security;
+﻿using System.Diagnostics;
+using System.Security;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using Harmony.Windows;
+using MahApps.Metro.Controls;
 
 namespace Harmony
 {
-    public partial class MainWindow : Window {
+    public partial class MainWindow : MetroWindow {
         private bool _started = false;
 
         private static MainWindow _window;
-        private static DisplayManagerWindow _displayManagerWindow;
 
         public static SecureString Password;
 
@@ -18,7 +22,6 @@ namespace Harmony
             _window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
-            _displayManagerWindow = new DisplayManagerWindow();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
@@ -38,7 +41,6 @@ namespace Harmony
                 }
 
                 StartButton.Content = "Stop";
-                OpenDisplayButton.IsEnabled = true;
 
                 _started = true;
             }
@@ -57,26 +59,52 @@ namespace Harmony
 
                 _started = false;
                 StartButton.Content = "Start";
-                OpenDisplayButton.IsEnabled = false;
             }
-        }
-
-        private void OnClickDisplayManager(object sender, RoutedEventArgs e) {
-            _displayManagerWindow.Show();
         }
 
         public static void Log(string message, bool error) {
             var err = error ? "[ERROR] " : "[INFO] "; 
             _window.Dispatcher?.Invoke(() => {
-                _window.Debug.AppendText("\n" + err + message);
+                _window.DebugTextBox.AppendText(err + message + "\n");
             });
+        }
+
+        private void OnClickSave(object sender, RoutedEventArgs e) {
+
+        }
+
+        private void OnClickUpdate(object sender, RoutedEventArgs e) {
+            var shrink = 20;
+            DisplayCanvas.Children.Clear();
+            var width = DisplayCanvas.Width / 2;
+            var height = DisplayCanvas.Height / 2;
+
+            var displays = DisplayManager.Displays;
+
+            foreach (DisplayManager.Display dis in displays) {
+                Rectangle recti = new Rectangle {
+                    Width = dis.Screen.Width / shrink,
+                    Height = dis.Screen.Height / shrink,
+
+                    StrokeThickness = 2,
+
+                    Stroke = Brushes.Black,
+                    Fill = dis.OwnDisplay ? Brushes.CadetBlue : Brushes.Red
+                };
+                Canvas.SetLeft(recti, dis.Location.X / shrink);// + width);
+                Canvas.SetTop(recti, dis.Location.Y / shrink);// + height);
+                var i = DisplayCanvas.Children.Add(recti);
+            }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             MouseHook.Stop();
             KeyboardHook.Stop();
             NetworkCommunicator.Instance?.Close();
-            _displayManagerWindow.Close();
+        }
+
+        private void DisplayCanvas_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            Debug.WriteLine(e.GetPosition(DisplayCanvas).ToString());
         }
     }
 }

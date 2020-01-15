@@ -1,4 +1,5 @@
-﻿<Window x:Class="Harmony.MainWindow"
+﻿<mah:MetroWindow
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls" x:Class="Harmony.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,15 +8,64 @@
         mc:Ignorable="d"
         Title="Harmony" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
-        <Button Name="StartButton" Content="Start" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120" Click="OnClickStart" ClickMode="Release"/>
-        <CheckBox Name="MasterCheckBox" Content="is Master" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top"/>
-        <TextBox Name="IPInput" HorizontalAlignment="Left" Height="23" Margin="10,75,0,0" TextWrapping="Wrap" Text="localhost" VerticalAlignment="Top" Width="120"/>
-        <TextBox Name="PortInput" HorizontalAlignment="Left" Height="23" Margin="10,115,0,0" TextWrapping="Wrap" Text="55555" VerticalAlignment="Top" Width="120"/>
-        <TextBox Name="Debug" HorizontalAlignment="Left" Margin="166,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="399" Width="616"/>
-        <PasswordBox Name="PasswordInput" HorizontalAlignment="Left" Margin="10,155,0,0" Width="120" Password="secretPassword" Height="23" VerticalAlignment="Top"/>
-        <Label Content="IP-Address:" HorizontalAlignment="Left" Margin="4,55,0,0" VerticalAlignment="Top"/>
-        <Label Content="Port:" HorizontalAlignment="Left" Margin="4,95,0,0" VerticalAlignment="Top"/>
-        <Label Content="Password:" HorizontalAlignment="Left" Margin="4,135,0,0" VerticalAlignment="Top"/>
-        <Button Name="OpenDisplayButton" Content="Open Display Manager" HorizontalAlignment="Left" Margin="10,389,0,0" VerticalAlignment="Top" Width="120" Click="OnClickDisplayManager" ClickMode="Release" IsEnabled="True"/>
+        <TabControl>
+            <TabItem Header="General">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
+
+                            <Button Name="StartButton" Margin="5" Content="Start" Click="OnClickStart" ClickMode="Release" Grid.Row="0"/>
+                            <CheckBox Name="MasterCheckBox" Margin="5" Content="is Master" Grid.Row="1"/>
+                            <Label Content="IP-Address:" Grid.Row="2"/>
+                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" Text="localhost"  Grid.Row="3"/>
+                            <Label Content="Port:" Grid.Row="4"/>
+                            <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" Text="55555" Grid.Row="5"/>
+                            <Label Content="Password:" Grid.Row="6"/>
+                            <PasswordBox Name="PasswordInput" Margin="5" Password="secretPassword" Grid.Row="7"/>
+                        </Grid>
+                    </Grid>
+                    <TextBox Name="DebugTextBox"  TextWrapping="Wrap"  Grid.Column="1"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="DisplayManager">
+                <Grid>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Canvas Grid.Row="0" x:Name="DisplayCanvas" Width="0" Height="0" Opacity="100" RenderTransformOrigin="0.5, 0.5" MouseDown="DisplayCanvas_MouseDown" />
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release"/>
+                            <Button Grid.Column="2" x:Name="UpdateButton" Content="Update Configuration" Click="OnClickUpdate" ClickMode="Release"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
-</Window>
+</mah:MetroWindow>
