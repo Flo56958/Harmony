@@ -74,26 +74,25 @@ namespace Harmony
         }
 
         private void OnClickUpdate(object sender, RoutedEventArgs e) {
-            var shrink = 20;
+            var shrink = 5; //(int) (1 / (Math.Min(1920 / this.ActualWidth, 1080 / this.ActualHeight)) * 3);
             DisplayCanvas.Children.Clear();
-            var width = DisplayCanvas.Width / 2;
-            var height = DisplayCanvas.Height / 2;
 
             var displays = DisplayManager.Displays;
 
-            foreach (DisplayManager.Display dis in displays) {
-                Rectangle recti = new Rectangle {
+            foreach (var dis in displays) {
+                var recti = new Rectangle {
                     Width = dis.Screen.Width / shrink,
                     Height = dis.Screen.Height / shrink,
 
-                    StrokeThickness = 2,
+                    StrokeThickness = 1,
 
                     Stroke = Brushes.Black,
-                    Fill = dis.OwnDisplay ? Brushes.CadetBlue : Brushes.Red
+                    Fill = dis.OwnDisplay ? Brushes.CornflowerBlue : Brushes.IndianRed
                 };
-                Canvas.SetLeft(recti, dis.Location.X / shrink);// + width);
-                Canvas.SetTop(recti, dis.Location.Y / shrink);// + height);
-                var i = DisplayCanvas.Children.Add(recti);
+
+                Canvas.SetLeft(recti, dis.Location.X / shrink);
+                Canvas.SetTop(recti, dis.Location.Y / shrink);
+                DisplayCanvas.Children.Add(recti);
             }
         }
 
@@ -103,6 +102,7 @@ namespace Harmony
             NetworkCommunicator.Instance?.Close();
         }
 
+        private bool _canvasClicked = false;
         private void DisplayCanvas_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) {
             Debug.WriteLine(e.GetPosition(DisplayCanvas).ToString());
         }
