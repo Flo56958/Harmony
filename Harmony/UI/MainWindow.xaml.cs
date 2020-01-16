@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,6 +29,7 @@ namespace Harmony {
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
             _model = (HarmonyViewModel)base.DataContext;
+            VersionLabel.Content = "Harmony-Version: " + typeof(MainWindow).Assembly.GetName().Version;
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
@@ -94,10 +96,6 @@ namespace Harmony {
                     screens = DisplayManager.Displays
                 }
             });
-        }
-
-        private void OnClickUpdate(object sender, RoutedEventArgs e) {
-            _updateDisplayCanvas();
         }
 
         public static void updateDisplayCanvas() {

@@ -49,7 +49,7 @@
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="DisplayManager">
+            <TabItem Header="Display Manager">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -61,10 +61,8 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
                             <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release" IsEnabled="{Binding isMaster}"/>
-                            <Button Grid.Column="2" x:Name="UpdateButton" Content="Update Configuration" Click="OnClickUpdate" ClickMode="Release" IsEnabled="{Binding isMaster}"/>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -83,7 +81,14 @@
                         <Bold><Hyperlink NavigateUri="https://github.com/Microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.Xaml.Behaviors.Wpf</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.Xaml.Behaviors.Wpf/1.1.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
                         <Bold><Hyperlink NavigateUri="https://www.newtonsoft.com/json" RequestNavigate="Hyperlink_RequestNavigate">Newtonsoft.Json</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Newtonsoft.Json/12.0.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
                     </TextBlock>
-                    <Label Content="© 2020 - Flo56958" Grid.Row="1"></Label>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="© 2020 - Flo56958" Grid.Column="0"></Label>
+                        <Label Name="VersionLabel" Grid.Column="1"></Label>
+                    </Grid>
                 </Grid>
             </TabItem>
         </TabControl>
