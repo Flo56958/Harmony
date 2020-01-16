@@ -142,7 +142,7 @@ namespace Harmony {
                     }
                 }
 
-                if (onSlave == 0) continue;
+                if (onSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
 
                 _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
@@ -234,6 +234,12 @@ namespace Harmony {
                         var kp = ((JObject)packet.Pack).ToObject<HarmonyPacket.KeyboardPacket>();
                         Keyboard.SendInput(kp);
                         break;
+
+                    case HarmonyPacket.PacketType.DisplayPacket:
+                        var dp = ((JObject)packet.Pack).ToObject<HarmonyPacket.DisplayPacket>();
+                        DisplayManager.SetUp(dp.screens);
+                        break;
+
                 }
             }
         }

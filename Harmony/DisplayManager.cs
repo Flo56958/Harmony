@@ -40,7 +40,7 @@ namespace Harmony {
 
         public static void AddRight(Display display) {
             var left = Displays[Displays.Count - 1];
-            display.Location = new Point(left.Location.X + left.Screen.Width, left.Location.Y);
+            display.Location = new Point(left.Location.X + left.Screen.Width, display.Location.Y);
             Displays.Add(display);
         }
 
