@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Security;
+using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -74,18 +76,17 @@ namespace Harmony {
         }
 
         private void OnClickSave(object sender, RoutedEventArgs e) {
-            var shrink = 10;
-            foreach(var obj in DisplayCanvas.Children) {
-                if(typeof(Canvas).IsInstanceOfType(obj)) {
-                    var c = (Canvas)obj;
-                    if (c.Background.Equals(Brushes.IndianRed)) {
-                        int i = int.Parse(((TextBlock) c.Children[0]).Text);
-                        DisplayManager.Displays[i].Location = new System.Drawing.Point {
-                            X = (int) (Canvas.GetLeft(c) - c.Width / 2) * shrink,
-                            Y = (int)(Canvas.GetTop(c) - c.Height / 2) * shrink
-                        };
-                    }
-                }
+            var shrink = 10.0;
+            var main = DisplayManager.GetDisplayFromPoint(0, 0);
+            foreach (var obj in DisplayCanvas.Children) {
+                if (!(obj is Canvas)) continue;
+                var c = (Canvas)obj;
+                if (!c.Background.Equals(Brushes.IndianRed)) continue;
+                var i = int.Parse(((TextBlock) c.Children[0]).Text);
+                DisplayManager.Displays[i].Location = new System.Drawing.Point {
+                    X = (int) ((Canvas.GetLeft(c) + (main.Screen.Width / shrink) / 2) * shrink),
+                    Y = (int) ((Canvas.GetTop(c) + (main.Screen.Height / shrink) / 2) * shrink)
+                };
             }
             NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.DisplayPacket,
@@ -96,18 +97,24 @@ namespace Harmony {
         }
 
         private void OnClickUpdate(object sender, RoutedEventArgs e) {
-            var shrink = 10; //(int) (1 / (Math.Min(1920 / this.ActualWidth, 1080 / this.ActualHeight)) * 3);
+            var shrink = 10.0;
             DisplayCanvas.Children.Clear();
 
             var displays = DisplayManager.Displays;
+
+            var main = DisplayManager.GetDisplayFromPoint(0, 0);
 
             foreach (var dis in displays) {
                 var canv = new Canvas() {
                     Width = dis.Screen.Width / shrink,
                     Height = dis.Screen.Height / shrink,
+                    MaxWidth = dis.Screen.Width / shrink,
+                    MaxHeight = dis.Screen.Height / shrink,
                     Background = dis.OwnDisplay ? Brushes.CornflowerBlue : Brushes.IndianRed,
                     Opacity = 100
                 };
+
+                Debug.WriteLine($"{canv.Width} + {canv.Height}");
 
                 var disNo = new TextBlock() {
                     Width = canv.Width,
@@ -133,15 +140,28 @@ namespace Harmony {
                 canv.Children.Add(disNo);
                 canv.Children.Add(disSize);
 
-                Canvas.SetLeft(canv, dis.Location.X / shrink - canv.Width / 2);
-                Canvas.SetTop(canv, dis.Location.Y / shrink - canv.Height / 2);
+                Canvas.SetLeft(canv, dis.Location.X / shrink - (main.Screen.Width / shrink) / 2);
+                Canvas.SetTop(canv, dis.Location.Y / shrink - (main.Screen.Height / shrink) / 2);
 
                 if (isMaster && !dis.OwnDisplay) {
                     canv.MouseLeftButtonDown += (s, eArgs) => {
                         var c = ((Canvas)s);
                         c.Opacity = 20;
+                        var deltaLeft = Canvas.GetLeft(c);
+                        var deltaTop = Canvas.GetTop(c);
                         Canvas.SetLeft(c, eArgs.GetPosition(DisplayCanvas).X - c.Width / 2);
                         Canvas.SetTop(c, eArgs.GetPosition(DisplayCanvas).Y - c.Height / 2);
+                        deltaLeft = Canvas.GetLeft(c) - deltaLeft;
+                        deltaTop = Canvas.GetTop(c) - deltaTop;
+
+                        foreach (var can in DisplayCanvas.Children) {
+                            if (can.Equals(c)) continue;
+                            if (!(can is Canvas)) continue;
+                            var canvas = (Canvas)can;
+                            if (!canvas.Background.Equals(canv.Background)) continue;
+                            Canvas.SetLeft(canvas, Canvas.GetLeft(canvas) + deltaLeft);
+                            Canvas.SetTop(canvas, Canvas.GetTop(canvas) + deltaTop);
+                        }
                     };
                     canv.MouseLeftButtonUp += (s, eArgs) => {
                         ((Canvas)s).Opacity = 100;
@@ -149,9 +169,22 @@ namespace Harmony {
                     };
                     canv.MouseMove += (s, eArgs) => {
                         var c = ((Canvas)s);
-                        if (eArgs.LeftButton == System.Windows.Input.MouseButtonState.Pressed && c.Opacity == 20) {
-                            Canvas.SetLeft(c, eArgs.GetPosition(DisplayCanvas).X - c.Width / 2);
-                            Canvas.SetTop(c, eArgs.GetPosition(DisplayCanvas).Y - c.Height / 2);
+                        if (eArgs.LeftButton != System.Windows.Input.MouseButtonState.Pressed ||
+                            !(Math.Abs(c.Opacity - 20) < 0.1)) return;
+                        var deltaLeft = Canvas.GetLeft(c);
+                        var deltaTop = Canvas.GetTop(c);
+                        Canvas.SetLeft(c, eArgs.GetPosition(DisplayCanvas).X - c.Width / 2);
+                        Canvas.SetTop(c, eArgs.GetPosition(DisplayCanvas).Y - c.Height / 2);
+                        deltaLeft = Canvas.GetLeft(c) - deltaLeft;
+                        deltaTop = Canvas.GetTop(c) - deltaTop;
+
+                        foreach (var can in DisplayCanvas.Children) {
+                            if (can.Equals(c)) continue;
+                            if (!(can is Canvas)) continue;
+                            var canvas = (Canvas) can;
+                            if (!canvas.Background.Equals(canv.Background)) continue;
+                            Canvas.SetLeft(canvas, Canvas.GetLeft(canvas) + deltaLeft);
+                            Canvas.SetTop(canvas, Canvas.GetTop(canvas) + deltaTop);
                         }
                     };
                 }

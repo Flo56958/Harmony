@@ -142,7 +142,7 @@ namespace Harmony {
                     }
                 }
 
-                if (onSlave == 0) continue;
+                if (onSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
 
                 _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
