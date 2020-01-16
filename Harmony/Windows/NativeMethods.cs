@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace Harmony.Windows {
@@ -30,5 +31,14 @@ namespace Harmony.Windows {
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetCursorPos(int x, int y);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out Point lpPoint);
+
+        public static Point GetCursorPosition() {
+            Point lpPoint;
+            GetCursorPos(out lpPoint);
+            return lpPoint;
+        }
     }
 }

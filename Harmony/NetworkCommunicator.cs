@@ -100,9 +100,6 @@ namespace Harmony {
 
             var mouseX = 0;
             var mouseY = 0;
-            var mouseMX = 0;
-            var mouseMY = 0;
-
             while (true) {
                 var hp = _blockingCollection.Take();
                 if (hp.Type == HarmonyPacket.PacketType.MousePacket) {
@@ -114,20 +111,19 @@ namespace Harmony {
                         mouseX = mp.PosX;
                         mouseY = mp.PosY;
                         if (onScreen.OwnDisplay) {
-                            mouseMX = mp.PosX;
-                            mouseMY = mp.PosY;
                             continue;
                         }
 
                         onSlave = 1;
                     }
                     else {
-                        mouseX += mp.PosX - mouseMX;
-                        mouseY += mp.PosY - mouseMY;
+                        var pos = NativeMethods.GetCursorPosition();
+                        mouseX += mp.PosX - pos.X;
+                        mouseY += mp.PosY - pos.Y;
                         var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
                         if (onScreen == null) {
-                            mouseX -= mp.PosX - mouseMX;
-                            mouseY -= mp.PosY - mouseMY;
+                            mouseX -= mp.PosX - pos.X;
+                            mouseY -= mp.PosY - pos.Y;
                             continue;
                         }
 
@@ -137,7 +133,6 @@ namespace Harmony {
                         }
                         mp.PosX = mouseX;
                         mp.PosY = mouseY;
-
                     }
                 }
 
@@ -218,12 +213,10 @@ namespace Harmony {
                         if (d.OwnDisplay) {
                             //TODO: Show Mouse when hidden
                             if (mp.Action == (uint)MouseFlag.Move) { //Move
-                                NativeMethods.SetCursorPos(mp.PosX - DisplayManager.SlaveMain.Location.X, mp.PosY - DisplayManager.SlaveMain.Location.Y); //Needs Elevation!!
-                            }
-                            else {
+                                NativeMethods.SetCursorPos(mp.PosX - DisplayManager.SlaveMain.Location.X, mp.PosY - DisplayManager.SlaveMain.Location.Y);
+                            } else {
                                 Mouse.SendInput(mp);
                             }
-
                         }
 
                         break;

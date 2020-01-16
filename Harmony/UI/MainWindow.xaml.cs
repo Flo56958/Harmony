@@ -122,8 +122,6 @@ namespace Harmony {
                     Opacity = 100
                 };
 
-                Debug.WriteLine($"{canv.Width} + {canv.Height}");
-
                 var disNo = new TextBlock() {
                     Width = canv.Width,
                     Height = 25,
