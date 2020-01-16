@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using Harmony.UI;
 using Harmony.Windows;
 using MahApps.Metro.Controls;
@@ -21,8 +22,7 @@ namespace Harmony {
 
         private bool isMaster;
 
-        public MainWindow()
-        {
+        public MainWindow() {
             InitializeComponent();
             _window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
@@ -97,6 +97,14 @@ namespace Harmony {
         }
 
         private void OnClickUpdate(object sender, RoutedEventArgs e) {
+            _updateDisplayCanvas();
+        }
+
+        public static void updateDisplayCanvas() {
+            _window.Dispatcher?.InvokeAsync(_window._updateDisplayCanvas);
+        }
+
+        private void _updateDisplayCanvas() {
             var shrink = 10.0;
             DisplayCanvas.Children.Clear();
 
@@ -181,7 +189,7 @@ namespace Harmony {
                         foreach (var can in DisplayCanvas.Children) {
                             if (can.Equals(c)) continue;
                             if (!(can is Canvas)) continue;
-                            var canvas = (Canvas) can;
+                            var canvas = (Canvas)can;
                             if (!canvas.Background.Equals(canv.Background)) continue;
                             Canvas.SetLeft(canvas, Canvas.GetLeft(canvas) + deltaLeft);
                             Canvas.SetTop(canvas, Canvas.GetTop(canvas) + deltaTop);
@@ -196,6 +204,11 @@ namespace Harmony {
             MouseHook.Stop();
             KeyboardHook.Stop();
             NetworkCommunicator.Instance?.Close();
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            e.Handled = true;
         }
     }
 }

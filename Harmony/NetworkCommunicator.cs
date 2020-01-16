@@ -97,7 +97,6 @@ namespace Harmony {
                 }
             })));
             MainWindow.Log("Finished Handshake with Slave!", false);
-            DisplayManager.PrintScreenConfiguration();
 
             var mouseX = 0;
             var mouseY = 0;
@@ -200,7 +199,6 @@ namespace Harmony {
             }
             DisplayManager.SetUp(((JObject)displayPacketReal.Pack).ToObject<HarmonyPacket.DisplayPacket>().screens);
             MainWindow.Log("Finished Handshake with Master!", false);
-            DisplayManager.PrintScreenConfiguration();
 
             while (!_rx.EndOfStream) {
                 var line = _rx.ReadLine();
