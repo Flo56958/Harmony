@@ -5,14 +5,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Harmony.UI"
-    mc:Ignorable="d"
-        Title="Harmony" Height="450" Width="800" Closing="Window_Closing">
+        mc:Ignorable="d"
+        ShowIconOnTitleBar="True"
+        Icon="../Resources/Harmony.ico"
+        Title="Harmony" Height="450" Width="800" Closing="Window_Closing" StateChanged="MetroWindow_StateChanged">
     <mah:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </mah:MetroWindow.Resources>
     <Window.DataContext>
         <local:HarmonyViewModel/>
     </Window.DataContext>
+    <mah:MetroWindow.RightWindowCommands>
+        <mah:WindowCommands>
+            <Button Content="Settings"/>
+        </mah:WindowCommands>
+    </mah:MetroWindow.RightWindowCommands>
     <Grid>
         <TabControl>
             <TabItem Header="General">

@@ -8,10 +8,9 @@ using System.Windows.Navigation;
 using Harmony.UI;
 using Harmony.Windows;
 using MahApps.Metro;
-using MahApps.Metro.Controls;
 
 namespace Harmony {
-    public partial class MainWindow : MetroWindow {
+    public partial class MainWindow {
 
         private static MainWindow _window;
 
@@ -197,6 +196,19 @@ namespace Harmony {
 
         private void TabItem_Selected(object sender, RoutedEventArgs e) {
             _updateDisplayCanvas();
+        }
+
+        private void MetroWindow_StateChanged(object sender, EventArgs e) {
+            switch (this.WindowState) {
+                case WindowState.Maximized:
+                    break;
+                case WindowState.Minimized:
+                    this.Hide();
+                    break;
+                case WindowState.Normal:
+
+                    break;
+            }
         }
     }
 }
