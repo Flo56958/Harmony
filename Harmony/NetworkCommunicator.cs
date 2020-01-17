@@ -18,18 +18,13 @@ namespace Harmony {
         private StreamReader _rx;
         private readonly BlockingCollection<HarmonyPacket> _blockingCollection;
 
-        private readonly string _address;
-        private readonly int _port;
-
         private readonly Thread _communicationThread;
 
         public static volatile int onSlave;
 
-        public NetworkCommunicator(string address, int port, bool isMaster) {
+        public NetworkCommunicator() {
             if (Instance != null) return;
-            _address = address;
-            _port = port;
-            _communicationThread = isMaster ? new Thread(PackAndSend) : new Thread(ListenAndUnpack);
+            _communicationThread = MainWindow.Model.IsMaster ? new Thread(PackAndSend) : new Thread(ListenAndUnpack);
 
             _blockingCollection = new BlockingCollection<HarmonyPacket>();
             _communicationThread.Start();
@@ -47,7 +42,8 @@ namespace Harmony {
         }
 
         private void PackAndSend() {
-            var tcpOut = new TcpClient(_address, _port);
+            if (!int.TryParse(MainWindow.Model.Port, out int port)) return;
+            var tcpOut = new TcpClient(MainWindow.Model.IpAddress, port);
 
             _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
             _rx = new StreamReader(tcpOut.GetStream(), Encoding.UTF8);
@@ -143,7 +139,8 @@ namespace Harmony {
         }
 
         private void ListenAndUnpack() {
-            var tcpIn = new TcpListener(IPAddress.Any, _port);
+            if (!int.TryParse(MainWindow.Model.Port, out int port)) return;
+            var tcpIn = new TcpListener(IPAddress.Any, port);
             tcpIn.Start();
             var tcpInClient = tcpIn.AcceptTcpClient();
 

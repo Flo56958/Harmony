@@ -1,5 +1,6 @@
 ﻿using MahApps.Metro;
 using System.ComponentModel;
+using System.Security;
 using System.Windows;
 
 namespace Harmony.UI {
@@ -33,6 +34,22 @@ namespace Harmony.UI {
             }
         }
 
+        public string IpAddress {
+            get => ipAddress; set {
+                ipAddress = value;
+                RaisePropertyChanged("IpAddress");
+            }
+        }
+
+        public string Port {
+            get => port; set {
+                port = value;
+                RaisePropertyChanged("Port");
+            }
+        }
+
+        private string ipAddress = "localhost";
+        private string port = "56958";
         private bool darkmode = false;
         private bool notStarted = true;
         private bool isMaster = false;

@@ -30,13 +30,9 @@ namespace Harmony {
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
             if (Model.NotStarted) {
-                var ip = IPInput.Text;
-                var port = PortInput.Text;
-
-                if (!int.TryParse(port, out var iport)) return;
                 Password = PasswordInput.SecurePassword;
 
-                new NetworkCommunicator(ip, iport, Model.IsMaster);
+                new NetworkCommunicator();
                 if (NetworkCommunicator.Instance == null) return;
                 if (Model.IsMaster) {
                     MouseHook.Start();
