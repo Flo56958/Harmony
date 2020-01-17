@@ -1,45 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MahApps.Metro;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 
 namespace Harmony.UI {
-    class HarmonyViewModel : INotifyPropertyChanged {
-        #region Construction
-        /// Constructs the default instance of a SongViewModel
-        public HarmonyViewModel() {
-            StartButton_Value = "Start";
-            notStarted = true;
-            MasterCheckBox_Label = "is Master";
-            isMaster = false;
+    public class HarmonyViewModel : INotifyPropertyChanged {
+
+        public string StartButton_Value {
+            get => NotStarted ? "Start" : "Stop"; 
         }
-        #endregion
 
-        #region Members
-        public string StartButton_Value;
-        public bool notStarted;
-        public string MasterCheckBox_Label;
-        public bool isMaster;
-        #endregion
+        public bool NotStarted {
+            get => notStarted; set {
+                notStarted = value;
+                RaisePropertyChanged("NotStarted");
+                RaisePropertyChanged("StartButton_Value");
+            }
+        }
 
-        #region Properties
+        public bool IsMaster {
+            get => isMaster; set {
+                if (isMaster == value) return;
+                isMaster = value;
+                RaisePropertyChanged("IsMaster");
+            }
+        }
 
-        #endregion
+        public bool Darkmode {
+            get => darkmode; set {
+                darkmode = value;
+                ThemeManager.ChangeTheme(Application.Current, ThemeManager.GetInverseTheme(ThemeManager.DetectTheme()));
+                RaisePropertyChanged("Darkmode");
+            }
+        }
 
-        #region INotifyPropertyChanged Members
+        private bool darkmode = false;
+        private bool notStarted = true;
+        private bool isMaster = false;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        #endregion
-
-        #region Methods
-
         private void RaisePropertyChanged(string propertyName) {
-            // take a copy to prevent thread issues
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        #endregion
     }
 }

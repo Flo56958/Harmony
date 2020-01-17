@@ -7,6 +7,9 @@
         xmlns:local="clr-namespace:Harmony.UI"
     mc:Ignorable="d"
         Title="Harmony" Height="450" Width="800" Closing="Window_Closing">
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </mah:MetroWindow.Resources>
     <Window.DataContext>
         <local:HarmonyViewModel />
     </Window.DataContext>
@@ -36,20 +39,20 @@
                                 <RowDefinition Height="Auto"></RowDefinition>
                             </Grid.RowDefinitions>
 
-                            <Button Name="StartButton" Margin="5" Content="Start" Click="OnClickStart" ClickMode="Release" Grid.Row="0"/>
-                            <CheckBox Name="MasterCheckBox" Margin="5" Content="is Master" Grid.Row="1" IsChecked="false"/>
-                            <Label Content="IP-Address:" Grid.Row="2"/>
-                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" Text="localhost" IsEnabled="{Binding notStarted}" Grid.Row="3"/>
+                            <Button Name="StartButton" Margin="5" Content="{Binding StartButton_Value}" Click="OnClickStart" ClickMode="Release" Grid.Row="0"/>
+                            <CheckBox Name="MasterCheckBox" Margin="5" Content="is Master" Grid.Row="1" IsChecked="{Binding IsMaster,Mode=TwoWay}" IsEnabled="{Binding NotStarted}"/>
+                            <Label Content="IP-Address:" Grid.Row="2" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" Text="localhost" IsEnabled="{Binding NotStarted}" Grid.Row="3" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             <Label Content="Port:" Grid.Row="4"/>
-                            <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" Text="55555" IsEnabled="{Binding notStarted}" Grid.Row="5"/>
+                            <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" Text="55555" IsEnabled="{Binding NotStarted}" Grid.Row="5"/>
                             <Label Content="Password:" Grid.Row="6"/>
-                            <PasswordBox Name="PasswordInput" Margin="5" Password="secretPassword" IsEnabled="{Binding notStarted}" Grid.Row="7"/>
+                            <PasswordBox Name="PasswordInput" Margin="5" Password="secretPassword" IsEnabled="{Binding NotStarted}" Grid.Row="7"/>
                         </Grid>
                     </Grid>
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Display Manager">
+            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -62,7 +65,7 @@
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release" IsEnabled="{Binding isMaster}"/>
+                            <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -84,10 +87,12 @@
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="© 2020 - Flo56958" Grid.Column="0"></Label>
-                        <Label Name="VersionLabel" Grid.Column="1"></Label>
+                        <Label Content="© 2020 - Flo56958" Grid.Column="0" VerticalAlignment="Center"></Label>
+                        <Label Name="VersionLabel" Grid.Column="1" VerticalAlignment="Center"></Label>
+                        <mah:ToggleSwitch Grid.Column="2" Content="Darkmode" IsChecked="{Binding Darkmode}"/>
                     </Grid>
                 </Grid>
             </TabItem>

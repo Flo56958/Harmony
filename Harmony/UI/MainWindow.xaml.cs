@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,48 +7,43 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using Harmony.UI;
 using Harmony.Windows;
+using MahApps.Metro;
 using MahApps.Metro.Controls;
 
 namespace Harmony {
     public partial class MainWindow : MetroWindow {
-        private bool _started = false;
 
         private static MainWindow _window;
 
-        private static HarmonyViewModel _model;
+        public static HarmonyViewModel Model { get; private set; }
 
         public static SecureString Password;
-
-        private bool isMaster;
 
         public MainWindow() {
             InitializeComponent();
             _window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
-            _model = (HarmonyViewModel)base.DataContext;
+            Model = (HarmonyViewModel)base.DataContext;
             VersionLabel.Content = "Harmony-Version: " + typeof(MainWindow).Assembly.GetName().Version;
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
-            isMaster = MasterCheckBox.IsChecked != null && (bool)MasterCheckBox.IsChecked;
-            if (!_started) {
+            if (Model.NotStarted) {
                 var ip = IPInput.Text;
                 var port = PortInput.Text;
 
                 if (!int.TryParse(port, out var iport)) return;
                 Password = PasswordInput.SecurePassword;
 
-                new NetworkCommunicator(ip, iport, isMaster);
+                new NetworkCommunicator(ip, iport, Model.IsMaster);
                 if (NetworkCommunicator.Instance == null) return;
-                if (isMaster) {
+                if (Model.IsMaster) {
                     MouseHook.Start();
                     KeyboardHook.Start();
                 }
 
-                StartButton.Content = "Stop";
-
-                _started = true;
+                Model.NotStarted = false;
             }
             else {
                 if (NetworkCommunicator.Instance != null) {
@@ -58,15 +51,14 @@ namespace Harmony {
                     NetworkCommunicator.Instance = null;
                 }
 
-                if (isMaster) {
+                if (Model.IsMaster) {
                     MouseHook.Stop();
                     KeyboardHook.Stop();
                 }
 
                 DisplayManager.SetUp(); //Reload DisplayManager
 
-                _started = false;
-                StartButton.Content = "Start";
+                Model.NotStarted = true;
             }
         }
 
@@ -83,7 +75,7 @@ namespace Harmony {
             foreach (var obj in DisplayCanvas.Children) {
                 if (!(obj is Canvas)) continue;
                 var c = (Canvas)obj;
-                if (!c.Background.Equals(Brushes.IndianRed)) continue;
+                if (!c.Background.Equals(ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent"))) continue;
                 var i = int.Parse(((TextBlock) c.Children[0]).Text);
                 DisplayManager.Displays[i].Location = new System.Drawing.Point {
                     X = (int) ((Canvas.GetLeft(c) + (main.Screen.Width / shrink) / 2) * shrink),
@@ -116,7 +108,7 @@ namespace Harmony {
                     Height = dis.Screen.Height / shrink,
                     MaxWidth = dis.Screen.Width / shrink,
                     MaxHeight = dis.Screen.Height / shrink,
-                    Background = dis.OwnDisplay ? Brushes.CornflowerBlue : Brushes.IndianRed,
+                    Background = (Brush) (dis.OwnDisplay ? ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent2") : ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent")),
                     Opacity = 100
                 };
 
@@ -147,7 +139,7 @@ namespace Harmony {
                 Canvas.SetLeft(canv, dis.Location.X / shrink - (main.Screen.Width / shrink) / 2);
                 Canvas.SetTop(canv, dis.Location.Y / shrink - (main.Screen.Height / shrink) / 2);
 
-                if (isMaster && !dis.OwnDisplay) {
+                if (Model.IsMaster && !dis.OwnDisplay) {
                     canv.MouseLeftButtonDown += (s, eArgs) => {
                         var c = ((Canvas)s);
                         c.Opacity = 20;
@@ -205,6 +197,10 @@ namespace Harmony {
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
+        }
+
+        private void TabItem_Selected(object sender, RoutedEventArgs e) {
+            _updateDisplayCanvas();
         }
     }
 }
