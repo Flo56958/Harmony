@@ -59,7 +59,7 @@
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected">
+            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -72,7 +72,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <Button Grid.Column="0" x:Name="SaveButton" Content="Save Configuration" Click="OnClickSave" ClickMode="Release"/>
                         </Grid>
                     </Grid>
                 </Grid>

@@ -39,7 +39,8 @@ namespace Harmony {
                 }
 
                 Model.NotStarted = false;
-            } else {
+            }
+            else {
                 if (NetworkCommunicator.Instance != null) {
                     NetworkCommunicator.Instance.Close();
                     NetworkCommunicator.Instance = null;
@@ -70,11 +71,12 @@ namespace Harmony {
                 if (!(obj is Canvas)) continue;
                 var c = (Canvas)obj;
                 if (!c.Background.Equals(ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent"))) continue;
-                var i = int.Parse(((TextBlock)c.Children[0]).Text);
-                DisplayManager.Displays[i].Location = new System.Drawing.Point {
-                    X = (int)((Canvas.GetLeft(c) + (main.Screen.Width / shrink) / 2) * shrink),
-                    Y = (int)((Canvas.GetTop(c) + (main.Screen.Height / shrink) / 2) * shrink)
-                };
+                if (int.TryParse(((TextBlock)c.Children[0]).Text, out int i)) {
+                    DisplayManager.Displays[i].Location = new System.Drawing.Point {
+                        X = (int)((Canvas.GetLeft(c) + (main.Screen.Width / shrink) / 2) * shrink),
+                        Y = (int)((Canvas.GetTop(c) + (main.Screen.Height / shrink) / 2) * shrink)
+                    };
+                }
             }
             NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.DisplayPacket,
@@ -89,6 +91,8 @@ namespace Harmony {
         }
 
         private void _updateDisplayCanvas() {
+            if (!Model.IsMaster) return;
+
             var shrink = 10.0;
             DisplayCanvas.Children.Clear();
 
@@ -136,11 +140,9 @@ namespace Harmony {
                 if (Model.IsMaster && !dis.OwnDisplay) {
                     canv.MouseLeftButtonDown += (s, eArgs) => {
                         MoveAllScreens((Canvas)s, eArgs.GetPosition(DisplayCanvas));
-
                     };
                     canv.MouseLeftButtonUp += (s, eArgs) => {
                         var c = (Canvas)s;
-                        //TODO: Snap to other Screens
                         var changed = false;
                         do {
                             changed = false;
@@ -149,80 +151,27 @@ namespace Harmony {
                                 if (c == obj) continue;
                                 var o = (Canvas)obj;
                                 if (o.Background.Equals(c.Background)) continue;
-                                if (!Intersects(c, o)) continue;
+                                if (!Intersects(c, o, out IntersectsEnum direc)) continue;
                                 changed = true;
 
-                                var lt = new Point(Canvas.GetLeft(c), Canvas.GetTop(c));
-                                var lb = new Point(Canvas.GetLeft(c), Canvas.GetTop(c) + c.Height);
-                                var rt = new Point(Canvas.GetLeft(c) + c.Width, Canvas.GetTop(c));
-                                var rb = new Point(Canvas.GetLeft(c) + c.Width, Canvas.GetTop(c) + c.Height);
-
-                                double dx = 0;
-                                double dy = 0;
-                                if (IsPointInCanvas(lt, o)) {
-                                    var ddx = Canvas.GetLeft(o) - lt.X;
-                                    var ddy = Canvas.GetTop(o) - lt.Y;
-                                    dx = Math.Max(dx, Math.Abs(ddx));
-                                    if (dx == Math.Abs(ddx)) {
-                                        dx = ddx;
-                                    }
-                                    dy = Math.Max(dy, Math.Abs(ddy));
-                                    if (dy == Math.Abs(ddy)) {
-                                        dy = ddy;
-                                    }
+                                switch (direc) {
+                                    case IntersectsEnum.TOP:
+                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c), Canvas.GetTop(c) - 1));
+                                        break;
+                                    case IntersectsEnum.LEFT:
+                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c) - 1, Canvas.GetTop(c)));
+                                        break;
+                                    case IntersectsEnum.BOT:
+                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c), Canvas.GetTop(c) + 1));
+                                        break;
+                                    case IntersectsEnum.RIGHT:
+                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c) + 1, Canvas.GetTop(c)));
+                                        break;
+                                    case IntersectsEnum.NONE:
+                                        break;
                                 }
-
-                                if (IsPointInCanvas(lb, o)) {
-                                    var ddx = Canvas.GetLeft(o) - lb.X;
-                                    var ddy = Canvas.GetTop(o) + o.Height - lb.Y;
-                                    dx = Math.Max(dx, Math.Abs(ddx));
-                                    if (dx == Math.Abs(ddx)) {
-                                        dx = ddx;
-                                    }
-                                    dy = Math.Max(dy, Math.Abs(ddy));
-                                    if (dy == Math.Abs(ddy)) {
-                                        dy = ddy;
-                                    }
-                                }
-
-                                if (IsPointInCanvas(rt, o)) {
-                                    var ddx = Canvas.GetLeft(o) + o.Width - rt.X;
-                                    var ddy = Canvas.GetTop(o) - rt.Y;
-                                    dx = Math.Max(dx, Math.Abs(ddx));
-                                    if (dx == Math.Abs(ddx)) {
-                                        dx = ddx;
-                                    }
-                                    dy = Math.Max(dy, Math.Abs(ddy));
-                                    if (dy == Math.Abs(ddy)) {
-                                        dy = ddy;
-                                    }
-                                }
-
-                                if (IsPointInCanvas(rb, o)) {
-                                    var ddx = Canvas.GetLeft(o) + o.Width - rb.X;
-                                    var ddy = Canvas.GetTop(o) + o.Height - rb.Y;
-                                    dx = Math.Max(dx, Math.Abs(ddx));
-                                    if (dx == Math.Abs(ddx)) {
-                                        dx = ddx;
-                                    }
-                                    dy = Math.Max(dy, Math.Abs(ddy));
-                                    if (dy == Math.Abs(ddy)) {
-                                        dy = ddy;
-                                    }
-                                }
-
-                                dx -= Canvas.GetLeft(o);
-                                dy -= Canvas.GetTop(o);
-
-                                if (Math.Abs(dx) >= Math.Abs(dy)) {
-                                    Canvas.SetLeft(c, Canvas.GetLeft(c) - dx);
-                                }
-                                else {
-                                    Canvas.SetTop(c, Canvas.GetTop(c) - dy);
-                                }
-
-                                MoveAllScreens(c, new Point(Canvas.GetLeft(c), Canvas.GetTop(c)));
                             }
+                            System.Windows.Forms.Application.DoEvents();
                         } while (changed);
                     };
                     canv.MouseMove += (s, eArgs) => {
@@ -235,23 +184,47 @@ namespace Harmony {
             }
         }
 
-        private static bool IsPointInCanvas(Point p, Canvas c) {
-            return p.X > Canvas.GetLeft(c) && p.X < Canvas.GetLeft(c) + c.Width
-                                           && p.Y > Canvas.GetTop(c) && p.Y < Canvas.GetTop(c) + c.Height;
+        private enum IntersectsEnum {
+            TOP,
+            LEFT,
+            BOT,
+            RIGHT,
+            NONE
         }
 
-        private static bool Intersects(Canvas c1, Canvas c2) {
-            var lt = new Point(Canvas.GetLeft(c1), Canvas.GetTop(c1));
-            var lb = new Point(Canvas.GetLeft(c1), Canvas.GetTop(c1) + c1.Height);
-            var rt = new Point(Canvas.GetLeft(c1) + c1.Width, Canvas.GetTop(c1));
-            var rb = new Point(Canvas.GetLeft(c1) + c1.Width, Canvas.GetTop(c1) + c1.Height);
-            return IsPointInCanvas(lt, c2) || IsPointInCanvas(lb, c2) || IsPointInCanvas(rt, c2) ||
-                   IsPointInCanvas(rb, c2);
-            return Canvas.GetLeft(c1) < Canvas.GetLeft(c2) + c2.Width
-                   && Canvas.GetLeft(c1) + c1.Width > Canvas.GetLeft(c2)
-                   && Canvas.GetTop(c1) > Canvas.GetTop(c2) + c2.Height
-                   && Canvas.GetTop(c1) + c1.Height < Canvas.GetTop(c2);
+        private static bool Intersects(Canvas c1, Canvas c2, out IntersectsEnum direction) {
+            direction = IntersectsEnum.NONE;
+            double w = 0.5 * (c1.Width + c2.Width);
+            double h = 0.5 * (c1.Height + c2.Height);
+            double dx = (Canvas.GetLeft(c1) + c1.Width) / 2 - (Canvas.GetLeft(c2) + c2.Width) / 2;
+            double dy = (Canvas.GetTop(c1) + c1.Height) / 2 - (Canvas.GetTop(c2) + c2.Height) / 2;
+
+            if (Math.Abs(dx) <= w && Math.Abs(dy) <= h) {
+                double wy = w * dy;
+                double hx = h * dx;
+
+                if (wy > hx) {
+                    if (wy > -hx) {
+                        direction = IntersectsEnum.TOP;
+                    }
+                    else {
+                        direction = IntersectsEnum.LEFT;
+                    }
+                }
+                else {
+                    if (wy > -hx) {
+                        direction = IntersectsEnum.RIGHT;
+
+                    }
+                    else {
+                        direction = IntersectsEnum.BOT;
+                    }
+                }
+                return true;
+            }
+            return false;
         }
+
 
         private void MoveAllScreens(Canvas c, Point p) {
             var deltaLeft = Canvas.GetLeft(c);
