@@ -8,7 +8,7 @@ using System.Text;
 namespace Harmony {
     public static class Crypto {
         private const int Keysize = 256;
-        private const int DerivationIterations = 100_000;
+        private const int DerivationIterations = 10_000;
 
         private static byte[] _derivedPass;
 

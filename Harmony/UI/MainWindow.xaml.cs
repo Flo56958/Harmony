@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Security;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -34,7 +35,7 @@ namespace Harmony {
                 new NetworkCommunicator();
                 if (NetworkCommunicator.Instance == null) return;
                 if (Model.IsMaster) {
-                    MouseHook.Start();
+                    //MouseHook.Start();
                     KeyboardHook.Start();
                 }
 
@@ -47,7 +48,7 @@ namespace Harmony {
                 }
 
                 if (Model.IsMaster) {
-                    MouseHook.Stop();
+                    //MouseHook.Stop();
                     KeyboardHook.Stop();
                 }
 
@@ -139,7 +140,7 @@ namespace Harmony {
 
                 if (Model.IsMaster && !dis.OwnDisplay) {
                     canv.MouseLeftButtonDown += (s, eArgs) => {
-                        MoveAllScreens((Canvas)s, eArgs.GetPosition(DisplayCanvas));
+                        MoveAllScreens((Canvas)s, eArgs.GetPosition(DisplayCanvas), false);
                     };
                     canv.MouseLeftButtonUp += (s, eArgs) => {
                         var c = (Canvas)s;
@@ -148,99 +149,45 @@ namespace Harmony {
                             changed = false;
                             foreach (var obj in DisplayCanvas.Children) {
                                 if (!(obj is Canvas)) continue;
-                                if (c == obj) continue;
+                                if (c.Equals(obj)) continue;
                                 var o = (Canvas)obj;
                                 if (o.Background.Equals(c.Background)) continue;
-                                if (!Intersects(c, o, out IntersectsEnum direc)) continue;
+
+                                var x_overlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetLeft(c) + c.Width, Canvas.GetLeft(o) + o.Width) - Math.Max(Canvas.GetLeft(c), Canvas.GetLeft(o))));
+                                var y_overlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetTop(c) + c.Height, Canvas.GetTop(o) + o.Height) - Math.Max(Canvas.GetTop(c), Canvas.GetTop(o))));
+
+                                if (Math.Min(x_overlap, y_overlap) == 0) continue;
                                 changed = true;
 
-                                switch (direc) {
-                                    case IntersectsEnum.TOP:
-                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c), Canvas.GetTop(c) - 1));
-                                        break;
-                                    case IntersectsEnum.LEFT:
-                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c) - 1, Canvas.GetTop(c)));
-                                        break;
-                                    case IntersectsEnum.BOT:
-                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c), Canvas.GetTop(c) + 1));
-                                        break;
-                                    case IntersectsEnum.RIGHT:
-                                        MoveAllScreens(c, new Point(Canvas.GetLeft(c) + 1, Canvas.GetTop(c)));
-                                        break;
-                                    case IntersectsEnum.NONE:
-                                        break;
+                                if (x_overlap < y_overlap) {
+                                    MoveAllScreens(c, new Point(- x_overlap, 0), true);
                                 }
+                                else {
+                                    MoveAllScreens(c, new Point(0, - y_overlap), true);
+                                }
+                                break;
                             }
                             System.Windows.Forms.Application.DoEvents();
+                            Thread.Sleep(500);
                         } while (changed);
                     };
                     canv.MouseMove += (s, eArgs) => {
                         var c = (Canvas)s;
                         if (eArgs.LeftButton != System.Windows.Input.MouseButtonState.Pressed) return;
-                        MoveAllScreens(c, eArgs.GetPosition(DisplayCanvas));
+                        MoveAllScreens(c, Point.Add(eArgs.GetPosition(DisplayCanvas), new Vector(- c.Width / 2, - c.Height / 2)), false);
                     };
                 }
                 DisplayCanvas.Children.Add(canv);
             }
         }
 
-        private enum IntersectsEnum {
-            TOP,
-            LEFT,
-            BOT,
-            RIGHT,
-            NONE
-        }
-
-        private static bool Intersects(Canvas c1, Canvas c2, out IntersectsEnum direction) {
-            direction = IntersectsEnum.NONE;
-            double w = 0.5 * (c1.Width + c2.Width);
-            double h = 0.5 * (c1.Height + c2.Height);
-            double dx = (Canvas.GetLeft(c1) + c1.Width) / 2 - (Canvas.GetLeft(c2) + c2.Width) / 2;
-            double dy = (Canvas.GetTop(c1) + c1.Height) / 2 - (Canvas.GetTop(c2) + c2.Height) / 2;
-
-            if (Math.Abs(dx) <= w && Math.Abs(dy) <= h) {
-                double wy = w * dy;
-                double hx = h * dx;
-
-                if (wy > hx) {
-                    if (wy > -hx) {
-                        direction = IntersectsEnum.TOP;
-                    }
-                    else {
-                        direction = IntersectsEnum.LEFT;
-                    }
-                }
-                else {
-                    if (wy > -hx) {
-                        direction = IntersectsEnum.RIGHT;
-
-                    }
-                    else {
-                        direction = IntersectsEnum.BOT;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
-
-        private void MoveAllScreens(Canvas c, Point p) {
-            var deltaLeft = Canvas.GetLeft(c);
-            var deltaTop = Canvas.GetTop(c);
-            Canvas.SetLeft(c, p.X - c.Width / 2);
-            Canvas.SetTop(c, p.Y - c.Height / 2);
-            deltaLeft = Canvas.GetLeft(c) - deltaLeft;
-            deltaTop = Canvas.GetTop(c) - deltaTop;
-
+        private void MoveAllScreens(Canvas c, Point p, bool delta) {
             foreach (var can in DisplayCanvas.Children) {
-                if (can.Equals(c)) continue;
                 if (!(can is Canvas)) continue;
                 var canvas = (Canvas)can;
                 if (!canvas.Background.Equals(c.Background)) continue;
-                Canvas.SetLeft(canvas, Canvas.GetLeft(canvas) + deltaLeft);
-                Canvas.SetTop(canvas, Canvas.GetTop(canvas) + deltaTop);
+                Canvas.SetLeft(canvas, (delta) ? Canvas.GetLeft(canvas) + p.X : p.X);
+                Canvas.SetTop(canvas, (delta) ? Canvas.GetTop(canvas) + p.Y : p.Y);
             }
         }
 
