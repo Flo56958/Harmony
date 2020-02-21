@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 
 namespace Harmony.Windows {
     [Flags]
@@ -51,7 +52,7 @@ namespace Harmony.Windows {
             return 0;
         }
 
-        public static bool SendInput(HarmonyPacket.MousePacket mp) {
+        public static bool SendInput([NotNull] HarmonyPacket.MousePacket mp) {
             INPUT input;
             if (mp.Action == 0) return false;
             else if (mp.Action == (uint)MouseFlag.VerticalWheel || mp.Action == (uint)MouseFlag.HorizontalWheel
@@ -77,7 +78,7 @@ namespace Harmony.Windows {
                     }
                 };
             }
-            return NativeMethods.SendInput(1, new INPUT[] { input }, Marshal.SizeOf(input)) == 0;
+            return NativeMethods.SendInput(1, new[] { input }, Marshal.SizeOf(input)) == 0;
         }
     }
 
@@ -105,7 +106,7 @@ namespace Harmony.Windows {
             if (nCode < 0) return NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
             var hookStruct = (MOUSEINPUT)Marshal.PtrToStructure(lParam, typeof(MOUSEINPUT));
 
-            NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket() {
+            NetworkCommunicator.SendAsync(new HarmonyPacket() {
                 Type = HarmonyPacket.PacketType.MousePacket,
                 Pack = new HarmonyPacket.MousePacket {
                     PosX = hookStruct.X,
@@ -115,7 +116,7 @@ namespace Harmony.Windows {
                     Flags = hookStruct.Flags,
                 }
             });
-            return (IntPtr)NetworkCommunicator.onSlave + (int)NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
+            return (IntPtr)NetworkCommunicator.OnSlave + (int)NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
     }
 }

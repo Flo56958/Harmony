@@ -12,37 +12,37 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Harmony {
-    public class NetworkCommunicator {
-        public static NetworkCommunicator Instance;
-        private StreamWriter _tx;
-        private StreamReader _rx;
-        private readonly BlockingCollection<HarmonyPacket> _blockingCollection;
+    public static class NetworkCommunicator {
+        private static StreamWriter _tx;
+        private static StreamReader _rx;
+        private static BlockingCollection<HarmonyPacket> _blockingCollection;
 
-        private readonly Thread _communicationThread;
+        private static Thread _communicationThread;
 
-        public static volatile int onSlave;
+        public static volatile int OnSlave;
 
-        public NetworkCommunicator() {
-            if (Instance != null) return;
+        public static void Init() {
             _communicationThread = MainWindow.Model.IsMaster ? new Thread(PackAndSend) : new Thread(ListenAndUnpack);
-
             _blockingCollection = new BlockingCollection<HarmonyPacket>();
             _communicationThread.Start();
-            Instance = this;
         }
 
-        public void SendAsync(HarmonyPacket p) {
+        public static void SendAsync(HarmonyPacket p) {
             _blockingCollection.Add(p);
         }
 
-        public void Close() {
-            _communicationThread.Abort();
+        public static void Close() {
+            _communicationThread?.Abort();
             _tx?.Close();
             _rx?.Close();
+
+            _blockingCollection?.Dispose();
+            _tx?.Dispose();
+            _rx?.Dispose();
         }
 
-        private void PackAndSend() {
-            if (!int.TryParse(MainWindow.Model.Port, out int port)) return;
+        private static void PackAndSend() {
+            if (!int.TryParse(MainWindow.Model.Port, out var port)) return;
             var tcpOut = new TcpClient(MainWindow.Model.IpAddress, port);
 
             _tx = new StreamWriter(tcpOut.GetStream()) { AutoFlush = true };
@@ -101,7 +101,7 @@ namespace Harmony {
                 if (hp.Type == HarmonyPacket.PacketType.MousePacket) {
                     var mp = (HarmonyPacket.MousePacket)hp.Pack;
 
-                    if (onSlave == 0) {
+                    if (OnSlave == 0) {
                         var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
                         if (onScreen == null) continue;
                         mouseX = mp.PosX;
@@ -110,7 +110,7 @@ namespace Harmony {
                             continue;
                         }
 
-                        onSlave = 1;
+                        OnSlave = 1;
                     }
                     else {
                         var pos = NativeMethods.GetCursorPosition();
@@ -125,20 +125,20 @@ namespace Harmony {
 
                         if (onScreen.OwnDisplay) {
                             NativeMethods.SetCursorPos(mouseX, mouseY);
-                            onSlave = 0;
+                            OnSlave = 0;
                         }
                         mp.PosX = mouseX;
                         mp.PosY = mouseY;
                     }
                 }
 
-                if (onSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
+                if (OnSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
 
                 _tx.WriteLine(Crypto.Encrypt(JsonConvert.SerializeObject(hp)));
             }
         }
 
-        private void ListenAndUnpack() {
+        private static void ListenAndUnpack() {
             if (!int.TryParse(MainWindow.Model.Port, out int port)) return;
             var tcpIn = new TcpListener(IPAddress.Any, port);
             tcpIn.Start();

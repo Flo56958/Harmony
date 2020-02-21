@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 
 namespace Harmony.Windows {
 
@@ -38,7 +39,7 @@ namespace Harmony.Windows {
                    keyCode == Keys.Divide;
         }
 
-        public static bool SendInput(HarmonyPacket.KeyboardPacket kp) {
+        public static bool SendInput([NotNull] HarmonyPacket.KeyboardPacket kp) {
             INPUT input;
             if (kp.wParam == 256) { //Down
                 input = new INPUT {
@@ -89,7 +90,7 @@ namespace Harmony.Windows {
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
-            NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket() {
+            NetworkCommunicator.SendAsync(new HarmonyPacket() {
                 Type = HarmonyPacket.PacketType.KeyBoardPacket,
                 Pack = new HarmonyPacket.KeyboardPacket() {
                     wParam = wParam.ToInt32(),
@@ -97,7 +98,7 @@ namespace Harmony.Windows {
                 }
             });
 
-            return (IntPtr)NetworkCommunicator.onSlave + (int)NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
+            return (IntPtr)NetworkCommunicator.OnSlave + (int)NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
     }
 }

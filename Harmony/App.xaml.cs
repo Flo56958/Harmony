@@ -2,23 +2,28 @@
 using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Input;
 
 namespace Harmony {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App {
-        System.Windows.Forms.NotifyIcon nIcon = new System.Windows.Forms.NotifyIcon();
+        NotifyIcon nIcon = new NotifyIcon();
         public App() {
             nIcon.Icon = Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
             nIcon.Visible = true;
             nIcon.MouseDown += (s, e) => {
                 if (e.Button != MouseButtons.Left) return;
+                if (MainWindow == null) return;
                 MainWindow.Show();
                 MainWindow.Visibility = Visibility.Visible;
                 MainWindow.WindowState = WindowState.Normal;
             };
+        }
+
+        protected override void OnExit(ExitEventArgs e) {
+            nIcon.Dispose();
+            base.OnExit(e);
         }
     }
 }

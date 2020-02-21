@@ -15,11 +15,6 @@
     <Window.DataContext>
         <local:HarmonyViewModel/>
     </Window.DataContext>
-    <mah:MetroWindow.RightWindowCommands>
-        <mah:WindowCommands>
-            <Button Content="Settings"/>
-        </mah:WindowCommands>
-    </mah:MetroWindow.RightWindowCommands>
     <Grid>
         <TabControl>
             <TabItem Header="General">
@@ -37,6 +32,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -48,18 +44,18 @@
 
                             <Button Name="StartButton" Margin="5" Content="{Binding StartButton_Value}" Click="OnClickStart" ClickMode="Release" Grid.Row="0"/>
                             <CheckBox Name="MasterCheckBox" Margin="5" Content="is Master" Grid.Row="1" IsChecked="{Binding IsMaster,Mode=TwoWay}" IsEnabled="{Binding NotStarted}"/>
-                            <Label Content="IP-Address:" Grid.Row="2" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="3" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}" Text="{Binding IpAddress, Mode=TwoWay}"/>
-                            <Label Content="Port:" Grid.Row="4"/>
-                            <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="5" Text="{Binding Port, Mode=TwoWay}"/>
-                            <Label Content="Password:" Grid.Row="6"/>
-                            <PasswordBox Name="PasswordInput" Margin="5" Password="secretPassword" IsEnabled="{Binding NotStarted}" Grid.Row="7"/>
+                            <Label Content="IP-Address:" Grid.Row="3" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="4" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}" Text="{Binding IpAddress, Mode=TwoWay}"/>
+                            <Label Content="Port:" Grid.Row="5"/>
+                            <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="6" Text="{Binding Port, Mode=TwoWay}"/>
+                            <Label Content="Password:" Grid.Row="7"/>
+                            <PasswordBox Name="PasswordInput" Margin="5" Password="secretPassword" IsEnabled="{Binding NotStarted}" Grid.Row="8"/>
                         </Grid>
                     </Grid>
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" IsEnabled="{Binding IsMaster}">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -77,29 +73,61 @@
                     </Grid>
                 </Grid>
             </TabItem>
+            <TabItem Header="Settings">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <mah:ToggleSwitch Grid.Row="0" Content="Darkmode" IsChecked="{Binding Darkmode, Mode=TwoWay}"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
             <TabItem Header="About">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock>
+                    <ScrollViewer Grid.Row="0">
+                        <TextBlock>
                         <Bold>Dependencies: </Bold>
                         <LineBreak/>
                         <Bold><Hyperlink NavigateUri="https://github.com/ControlzEx/ControlzEx" RequestNavigate="Hyperlink_RequestNavigate">ControlzEx</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/ControlzEx/ControlzEx.git" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/ControlzEx/4.2.1/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
                         <Bold><Hyperlink NavigateUri="https://github.com/MahApps/MahApps.Metro" RequestNavigate="Hyperlink_RequestNavigate">MahApps.Metro</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/MahApps/MahApps.Metro.git" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/MahApps.Metro/2.0.0-alpha0660/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
-                        <Bold><Hyperlink NavigateUri="https://github.com/Microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.Xaml.Behaviors.Wpf</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.Xaml.Behaviors.Wpf/1.1.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeAnalysis.Analyzers</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeAnalysis.Analyzers/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeAnalysis.Common</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeAnalysis.Common/3.5.0-beta1-final/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeAnalysis.CSharp</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp/3.5.0-beta1-final/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeAnalysis.FxCopAnalyzers</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeAnalysis.FxCopAnalyzers/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeAnalysis.VersionCheckAnalyzer</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeAnalysis.VersionCheckAnalyzer/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.CodeQuality.Analyzers</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.CodeQuality.Analyzers/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.NetCore.Analyzers</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.NetCore.Analyzers/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.NetFramework.Analyzers</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/dotnet/roslyn-analyzers" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.NetFramework.Analyzers/2.9.8/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/Apache-2.0" RequestNavigate="Hyperlink_RequestNavigate">Apache-2.0</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://github.com/Microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Microsoft.Xaml.Behaviors.Wpf</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/microsoft/XamlBehaviorsWpf" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Microsoft.Xaml.Behaviors.Wpf/1.1.19/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
                         <Bold><Hyperlink NavigateUri="https://www.newtonsoft.com/json" RequestNavigate="Hyperlink_RequestNavigate">Newtonsoft.Json</Hyperlink></Bold> : <Hyperlink NavigateUri="https://github.com/JamesNK/Newtonsoft.Json" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/Newtonsoft.Json/12.0.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://licenses.nuget.org/MIT" RequestNavigate="Hyperlink_RequestNavigate">MIT</Hyperlink>)<LineBreak />
-                    </TextBlock>
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Buffers</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Buffers/4.4.0/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Collections.Immutable</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Collections.Immutable/1.5.0/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Memory</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Memory/4.5.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Numerics.Vectors</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Numerics.Vectors/4.4.0/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Reflection.Metadata</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Reflection.Metadata/1.6.0/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Runtime.CompilerServices.Unsafe</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Runtime.CompilerServices.Unsafe/4.5.2/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Text.Encoding.CodePages</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Text.Encoding.CodePages/4.5.1/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        <Bold><Hyperlink NavigateUri="https://dot.net/" RequestNavigate="Hyperlink_RequestNavigate">System.Threading.Tasks.Extensions</Hyperlink></Bold> : <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">Sources</Hyperlink>, <Hyperlink NavigateUri="https://www.nuget.org/packages/System.Threading.Tasks.Extensions/4.5.3/" RequestNavigate="Hyperlink_RequestNavigate">Nuget</Hyperlink> (<Hyperlink NavigateUri="https://github.com/dotnet/corefx/blob/master/LICENSE.TXT" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/dotnet/corefx/blob/master/LICENSE.TXT</Hyperlink>)<LineBreak />
+                        </TextBlock>
+                    </ScrollViewer>
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Label Content="© 2020 - Flo56958" Grid.Column="0" VerticalAlignment="Center"></Label>
                         <Label Name="VersionLabel" Grid.Column="1" VerticalAlignment="Center"></Label>
-                        <mah:ToggleSwitch Grid.Column="2" Content="Darkmode" IsChecked="{Binding Darkmode, Mode=TwoWay}"/>
                     </Grid>
                 </Grid>
             </TabItem>

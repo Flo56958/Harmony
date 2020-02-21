@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Security;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -32,23 +31,19 @@ namespace Harmony {
             if (Model.NotStarted) {
                 Password = PasswordInput.SecurePassword;
 
-                new NetworkCommunicator();
-                if (NetworkCommunicator.Instance == null) return;
+                NetworkCommunicator.Init();
                 if (Model.IsMaster) {
-                    //MouseHook.Start();
+                    MouseHook.Start();
                     KeyboardHook.Start();
                 }
 
                 Model.NotStarted = false;
             }
             else {
-                if (NetworkCommunicator.Instance != null) {
-                    NetworkCommunicator.Instance.Close();
-                    NetworkCommunicator.Instance = null;
-                }
+                NetworkCommunicator.Close();
 
                 if (Model.IsMaster) {
-                    //MouseHook.Stop();
+                    MouseHook.Stop();
                     KeyboardHook.Stop();
                 }
 
@@ -66,7 +61,7 @@ namespace Harmony {
         }
 
         private void OnClickSave(object sender, RoutedEventArgs e) {
-            var shrink = 10.0;
+            const double shrink = 10.0;
             var main = DisplayManager.GetDisplayFromPoint(0, 0);
             foreach (var obj in DisplayCanvas.Children) {
                 if (!(obj is Canvas)) continue;
@@ -79,7 +74,7 @@ namespace Harmony {
                     };
                 }
             }
-            NetworkCommunicator.Instance?.SendAsync(new HarmonyPacket {
+            NetworkCommunicator.SendAsync(new HarmonyPacket {
                 Type = HarmonyPacket.PacketType.DisplayPacket,
                 Pack = new HarmonyPacket.DisplayPacket {
                     screens = DisplayManager.Displays
@@ -94,7 +89,7 @@ namespace Harmony {
         private void _updateDisplayCanvas() {
             if (!Model.IsMaster) return;
 
-            var shrink = 10.0;
+            const double shrink = 10.0;
             DisplayCanvas.Children.Clear();
 
             var displays = DisplayManager.Displays;
@@ -144,31 +139,25 @@ namespace Harmony {
                     };
                     canv.MouseLeftButtonUp += (s, eArgs) => {
                         var c = (Canvas)s;
-                        var changed = false;
+                        bool changed;
                         do {
                             changed = false;
                             foreach (var obj in DisplayCanvas.Children) {
                                 if (!(obj is Canvas)) continue;
-                                if (c.Equals(obj)) continue;
                                 var o = (Canvas)obj;
                                 if (o.Background.Equals(c.Background)) continue;
 
-                                var x_overlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetLeft(c) + c.Width, Canvas.GetLeft(o) + o.Width) - Math.Max(Canvas.GetLeft(c), Canvas.GetLeft(o))));
-                                var y_overlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetTop(c) + c.Height, Canvas.GetTop(o) + o.Height) - Math.Max(Canvas.GetTop(c), Canvas.GetTop(o))));
+                                var xOverlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetLeft(c) + c.Width, Canvas.GetLeft(o) + o.Width) - Math.Max(Canvas.GetLeft(c), Canvas.GetLeft(o))));
+                                var yOverlap = Math.Round(Math.Max(0, Math.Min(Canvas.GetTop(c) + c.Height, Canvas.GetTop(o) + o.Height) - Math.Max(Canvas.GetTop(c), Canvas.GetTop(o))));
 
-                                if (Math.Min(x_overlap, y_overlap) == 0) continue;
+                                if (xOverlap == 0 || yOverlap == 0) continue;
                                 changed = true;
 
-                                if (x_overlap < y_overlap) {
-                                    MoveAllScreens(c, new Point(- x_overlap, 0), true);
-                                }
-                                else {
-                                    MoveAllScreens(c, new Point(0, - y_overlap), true);
-                                }
-                                break;
+                                MoveAllScreens(c,
+                                    xOverlap < yOverlap ? new Point(-xOverlap, 0) : new Point(0, -yOverlap), true);
+                                //break;
                             }
                             System.Windows.Forms.Application.DoEvents();
-                            Thread.Sleep(500);
                         } while (changed);
                     };
                     canv.MouseMove += (s, eArgs) => {
@@ -182,19 +171,21 @@ namespace Harmony {
         }
 
         private void MoveAllScreens(Canvas c, Point p, bool delta) {
+            var dx = Canvas.GetLeft(c) - p.X;
+            var dy = Canvas.GetTop(c) - p.Y;
             foreach (var can in DisplayCanvas.Children) {
                 if (!(can is Canvas)) continue;
                 var canvas = (Canvas)can;
                 if (!canvas.Background.Equals(c.Background)) continue;
-                Canvas.SetLeft(canvas, (delta) ? Canvas.GetLeft(canvas) + p.X : p.X);
-                Canvas.SetTop(canvas, (delta) ? Canvas.GetTop(canvas) + p.Y : p.Y);
+                Canvas.SetLeft(canvas, (delta) ? Canvas.GetLeft(canvas) + p.X : (c == canvas) ? p.X : Canvas.GetLeft(canvas) - dx);
+                Canvas.SetTop(canvas, (delta) ? Canvas.GetTop(canvas) + p.Y : (c == canvas) ? p.Y : Canvas.GetTop(canvas) - dy);
             }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
             MouseHook.Stop();
             KeyboardHook.Stop();
-            NetworkCommunicator.Instance?.Close();
+            NetworkCommunicator.Close();
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {

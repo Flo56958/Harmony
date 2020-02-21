@@ -11,48 +11,48 @@ namespace Harmony.UI {
         }
 
         public bool NotStarted {
-            get => notStarted; set {
-                notStarted = value;
+            get => _notStarted; set {
+                _notStarted = value;
                 RaisePropertyChanged("NotStarted");
                 RaisePropertyChanged("StartButton_Value");
             }
         }
 
         public bool IsMaster {
-            get => isMaster; set {
-                if (isMaster == value) return;
-                isMaster = value;
+            get => _isMaster; set {
+                if (_isMaster == value) return;
+                _isMaster = value;
                 RaisePropertyChanged("IsMaster");
             }
         }
 
         public bool Darkmode {
-            get => darkmode; set {
-                darkmode = value;
+            get => _darkmode; set {
+                _darkmode = value;
                 ThemeManager.ChangeTheme(Application.Current, ThemeManager.GetInverseTheme(ThemeManager.DetectTheme()));
                 RaisePropertyChanged("Darkmode");
             }
         }
 
         public string IpAddress {
-            get => ipAddress; set {
-                ipAddress = value;
+            get => _ipAddress; set {
+                _ipAddress = value;
                 RaisePropertyChanged("IpAddress");
             }
         }
 
         public string Port {
-            get => port; set {
-                port = value;
+            get => _port; set {
+                _port = value;
                 RaisePropertyChanged("Port");
             }
         }
 
-        private string ipAddress = "localhost";
-        private string port = "56958";
-        private bool darkmode = false;
-        private bool notStarted = true;
-        private bool isMaster = false;
+        private string _ipAddress = "localhost";
+        private string _port = "56958";
+        private bool _darkmode;
+        private bool _notStarted = true;
+        private bool _isMaster;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
