@@ -227,7 +227,6 @@ namespace Harmony {
                         var dp = ((JObject)packet.Pack).ToObject<HarmonyPacket.DisplayPacket>();
                         DisplayManager.SetUp(dp.screens);
                         break;
-
                 }
             }
         }

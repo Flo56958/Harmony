@@ -55,7 +55,7 @@
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" IsEnabled="{Binding IsMaster}">
+            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -86,6 +86,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <mah:ToggleSwitch Grid.Row="0" Content="Darkmode" IsChecked="{Binding Darkmode, Mode=TwoWay}"/>
+                        <mah:ToggleSwitch Grid.Row="1" Content="Debug Mode" IsChecked="{Binding DebugMode, Mode=TwoWay}"/>
                     </Grid>
                 </Grid>
             </TabItem>

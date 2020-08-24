@@ -1,6 +1,5 @@
 ﻿using MahApps.Metro;
 using System.ComponentModel;
-using System.Security;
 using System.Windows;
 
 namespace Harmony.UI {
@@ -34,6 +33,13 @@ namespace Harmony.UI {
             }
         }
 
+        public bool DebugMode {
+            get => _debugmode; set {
+                _debugmode = value;
+                RaisePropertyChanged("DebugMode");
+            }
+        }
+
         public string IpAddress {
             get => _ipAddress; set {
                 _ipAddress = value;
@@ -53,6 +59,7 @@ namespace Harmony.UI {
         private bool _darkmode;
         private bool _notStarted = true;
         private bool _isMaster;
+        private bool _debugmode = true;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

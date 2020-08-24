@@ -65,7 +65,7 @@ namespace Harmony.Windows {
                     }
                 };
             }
-            return NativeMethods.SendInput(1, new INPUT[] { input }, Marshal.SizeOf(input)) == 0;
+            return NativeMethods.SendInput(1, new[] { input }, Marshal.SizeOf(input)) == 0;
         }
     }
 
