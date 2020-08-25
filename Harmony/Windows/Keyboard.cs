@@ -46,9 +46,9 @@ namespace Harmony.Windows {
                     Type = InputType.Keyboard,
                     Data = new MOUSEKEYBOARDINPUT() {
                         Keyboard = new KEYBOARDINPUT() {
-                            KeyCode = (ushort)kp.key,
-                            Scan = (ushort)(NativeMethods.MapVirtualKey((uint)kp.key, 0) & 0xFFU),
-                            Flags = IsExtendedKey(kp.key) ? (uint)KeyboardFlag.ExtendedKey : 0
+                            KeyCode = (ushort)kp.Key,
+                            Scan = (ushort)(NativeMethods.MapVirtualKey((uint)kp.Key, 0) & 0xFFU),
+                            Flags = IsExtendedKey(kp.Key) ? (uint)KeyboardFlag.ExtendedKey : 0
                         }
                     }
                 };
@@ -58,9 +58,9 @@ namespace Harmony.Windows {
                     Type = InputType.Keyboard,
                     Data = new MOUSEKEYBOARDINPUT() {
                         Keyboard = new KEYBOARDINPUT() {
-                            KeyCode = (ushort)kp.key,
-                            Scan = (ushort)(NativeMethods.MapVirtualKey((uint)kp.key, 0) & 0xFFU),
-                            Flags = (uint)(IsExtendedKey(kp.key) ? KeyboardFlag.KeyUp | KeyboardFlag.ExtendedKey : KeyboardFlag.KeyUp)
+                            KeyCode = (ushort)kp.Key,
+                            Scan = (ushort)(NativeMethods.MapVirtualKey((uint)kp.Key, 0) & 0xFFU),
+                            Flags = (uint)(IsExtendedKey(kp.Key) ? KeyboardFlag.KeyUp | KeyboardFlag.ExtendedKey : KeyboardFlag.KeyUp)
                         }
                     }
                 };
@@ -94,7 +94,7 @@ namespace Harmony.Windows {
                 Type = HarmonyPacket.PacketType.KeyBoardPacket,
                 Pack = new HarmonyPacket.KeyboardPacket() {
                     wParam = wParam.ToInt32(),
-                    key = (Keys)Marshal.ReadInt32(lParam),
+                    Key = (Keys)Marshal.ReadInt32(lParam),
                 }
             });
 

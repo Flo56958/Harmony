@@ -32,7 +32,7 @@ namespace Harmony {
                 Password = PasswordInput.SecurePassword;
 
                 NetworkCommunicator.Init();
-                if (Model.IsMaster) {
+                if (Model.IsServer) {
                     MouseHook.Start();
                     KeyboardHook.Start();
                 }
@@ -42,7 +42,7 @@ namespace Harmony {
             else {
                 NetworkCommunicator.Close();
 
-                if (Model.IsMaster) {
+                if (Model.IsServer) {
                     MouseHook.Stop();
                     KeyboardHook.Stop();
                 }
@@ -87,7 +87,7 @@ namespace Harmony {
         }
 
         private void _updateDisplayCanvas() {
-            if (!Model.IsMaster) return;
+            if (!Model.IsServer) return;
 
             const double shrink = 10.0;
             DisplayCanvas.Children.Clear();
@@ -133,7 +133,7 @@ namespace Harmony {
                 Canvas.SetLeft(canv, dis.Location.X / shrink - (main.Screen.Width / shrink) / 2);
                 Canvas.SetTop(canv, dis.Location.Y / shrink - (main.Screen.Height / shrink) / 2);
 
-                if (Model.IsMaster && !dis.OwnDisplay) {
+                if (Model.IsServer && !dis.OwnDisplay) {
                     canv.MouseLeftButtonDown += (s, eArgs) => {
                         MoveAllScreens((Canvas)s, eArgs.GetPosition(DisplayCanvas), false);
                     };

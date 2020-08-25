@@ -55,8 +55,8 @@ namespace Harmony.Windows {
         public static bool SendInput([NotNull] HarmonyPacket.MousePacket mp) {
             INPUT input;
             if (mp.Action == 0) return false;
-            else if (mp.Action == (uint)MouseFlag.VerticalWheel || mp.Action == (uint)MouseFlag.HorizontalWheel
-                || mp.Action == (uint)MouseFlag.XDown || mp.Action == (uint)MouseFlag.XUp) {
+            if (mp.Action == (uint)MouseFlag.VerticalWheel || mp.Action == (uint)MouseFlag.HorizontalWheel
+                                                           || mp.Action == (uint)MouseFlag.XDown || mp.Action == (uint)MouseFlag.XUp) {
                 input = new INPUT() {
                     Type = InputType.Mouse,
                     Data = new MOUSEKEYBOARDINPUT() {
@@ -106,16 +106,28 @@ namespace Harmony.Windows {
             if (nCode < 0) return NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
             var hookStruct = (MOUSEINPUT)Marshal.PtrToStructure(lParam, typeof(MOUSEINPUT));
 
-            NetworkCommunicator.SendAsync(new HarmonyPacket() {
-                Type = HarmonyPacket.PacketType.MousePacket,
-                Pack = new HarmonyPacket.MousePacket {
-                    PosX = hookStruct.X,
-                    PosY = hookStruct.Y,
-                    MouseData = hookStruct.MouseData,
-                    Action = Mouse.MapWParamToFlags(wParam.ToInt32()),
-                    Flags = hookStruct.Flags,
-                }
-            });
+            var action = Mouse.MapWParamToFlags(wParam.ToInt32());
+            if (action == (uint) MouseFlag.Move) {
+                NetworkCommunicator.SendAsync(new HarmonyPacket()
+                {
+                    Type = HarmonyPacket.PacketType.MouseMovePacket,
+                    Pack = new HarmonyPacket.MouseMovePacket()
+                    {
+                        PosX = hookStruct.X,
+                        PosY = hookStruct.Y
+                    }
+                });
+            }
+            else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.MousePacket,
+                    Pack = new HarmonyPacket.MousePacket {
+                        MouseData = hookStruct.MouseData,
+                        Action = Mouse.MapWParamToFlags(wParam.ToInt32()),
+                        Flags = hookStruct.Flags,
+                    }
+                });
+            }
             return (IntPtr)NetworkCommunicator.OnSlave + (int)NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
     }

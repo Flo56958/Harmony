@@ -17,12 +17,18 @@ namespace Harmony.UI {
             }
         }
 
-        public bool IsMaster {
-            get => _isMaster; set {
-                if (_isMaster == value) return;
-                _isMaster = value;
-                RaisePropertyChanged("IsMaster");
+        public bool IsServer {
+            get => _isServer; set {
+                if (_isServer == value) return;
+                _isServer = value;
+                RaisePropertyChanged("IsServer");
+                RaisePropertyChanged("IsNotServer");
             }
+        }
+
+        public bool IsNotServer
+        {
+            get => !IsServer;
         }
 
         public bool Darkmode {
@@ -58,7 +64,7 @@ namespace Harmony.UI {
         private string _port = "56958";
         private bool _darkmode;
         private bool _notStarted = true;
-        private bool _isMaster;
+        private bool _isServer;
         private bool _debugmode = true;
 
         public event PropertyChangedEventHandler PropertyChanged;

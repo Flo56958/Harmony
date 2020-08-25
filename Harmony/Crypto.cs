@@ -18,8 +18,7 @@ namespace Harmony {
             return salt;
         }
 
-        internal static string Encrypt(string plainText) {
-            var bytes = Encoding.UTF8.GetBytes(plainText);
+        internal static byte[] Encrypt(byte[] bytes) {
             var iv = Generate256BitsOfRandomEntropy();
 
             using (var rijndaelManaged = new RijndaelManaged()) {
@@ -32,17 +31,14 @@ namespace Harmony {
                         using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {
                             cs.Write(bytes, 0, bytes.Length);
                             cs.FlushFinalBlock();
-                            var encBytes = iv;
-                            encBytes = encBytes.Concat(ms.ToArray()).ToArray();
-                            return Convert.ToBase64String(encBytes);
+                            return iv.Concat(ms.ToArray()).ToArray();
                         }
                     }
                 }
             }
         }
 
-        internal static string Decrypt(string cipherText) {
-            var bytes = Convert.FromBase64String(cipherText);
+        internal static byte[] Decrypt(byte[] bytes) {
             var data = bytes.Skip(Keysize / 8).Take(bytes.Length - Keysize / 8).ToArray();
             var iv = bytes.Take(Keysize / 8).ToArray();
 
@@ -55,8 +51,7 @@ namespace Harmony {
                     using (var ms = new MemoryStream(data)) {
                         using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read)) {
                             var plainTextBytes = new byte[data.Length];
-                            var decryptedByteCount = cs.Read(plainTextBytes, 0, plainTextBytes.Length);
-                            return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
+                            return plainTextBytes.Take(cs.Read(plainTextBytes, 0, plainTextBytes.Length)).ToArray();
                         }
                     }
                 }

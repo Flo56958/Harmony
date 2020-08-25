@@ -43,9 +43,9 @@
                             </Grid.RowDefinitions>
 
                             <Button Name="StartButton" Margin="5" Content="{Binding StartButton_Value}" Click="OnClickStart" ClickMode="Release" Grid.Row="0"/>
-                            <CheckBox Name="MasterCheckBox" Margin="5" Content="is Master" Grid.Row="1" IsChecked="{Binding IsMaster,Mode=TwoWay}" IsEnabled="{Binding NotStarted}"/>
-                            <Label Content="IP-Address:" Grid.Row="3" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="4" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}" Text="{Binding IpAddress, Mode=TwoWay}"/>
+                            <CheckBox Name="ServerCheckBox" Margin="5" Content="Server" Grid.Row="1" IsChecked="{Binding IsServer,Mode=TwoWay}" IsEnabled="{Binding NotStarted}"/>
+                            <Label Content="IP-Address:" Grid.Row="3" Visibility="{Binding IsNotServer, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBox Name="IPInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="4" Visibility="{Binding IsNotServer, Converter={StaticResource BooleanToVisibilityConverter}}" Text="{Binding IpAddress, Mode=TwoWay}"/>
                             <Label Content="Port:" Grid.Row="5"/>
                             <TextBox Name="PortInput" Margin="5" TextWrapping="Wrap" IsEnabled="{Binding NotStarted}" Grid.Row="6" Text="{Binding Port, Mode=TwoWay}"/>
                             <Label Content="Password:" Grid.Row="7"/>
@@ -55,7 +55,7 @@
                     <TextBox Name="DebugTextBox" IsReadOnly="True" TextWrapping="Wrap" Grid.Column="1"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" Visibility="{Binding IsMaster, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TabItem Header="Display Manager" Selector.Selected="TabItem_Selected" Visibility="{Binding IsServer, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid>
                     <Grid>
                         <Grid.RowDefinitions>
