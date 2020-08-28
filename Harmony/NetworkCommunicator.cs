@@ -36,12 +36,17 @@ namespace Harmony {
         }
 
         public static void Close() {
-            foreach (var thread in _threads) {
-                thread?.Abort();
+            if (_threads != null) {
+                foreach (var thread in _threads) {
+                    thread?.Abort();
+                }
             }
-            foreach (var keyValuePair in _connections) {
-                keyValuePair.Value.Close();
-                keyValuePair.Value.Dispose();
+
+            if (_connections != null) {
+                foreach (var keyValuePair in _connections) {
+                    keyValuePair.Value.Close();
+                    keyValuePair.Value.Dispose();
+                }
             }
 
             _blockingCollection?.Dispose();

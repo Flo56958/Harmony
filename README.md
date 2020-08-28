@@ -22,3 +22,6 @@ Harmony is a simple WPF-C#-Programm to share Mouse- and Keyboard-Inputs between 
 - File transfer through Ctrl+C + Ctrl+V (requires Clipboard syncing)
 - Save and load setting-files
 - Support for different languages
+- Companion App for Android
+  - Media Management Interface (Skip Songs from Phone, etc.)
+  - Monitor CPU Temps, etc.
