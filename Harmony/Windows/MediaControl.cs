@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using Windows.Foundation;
 using Windows.Media.Control;
@@ -94,5 +96,26 @@ namespace Harmony.Windows {
         public static IAsyncOperation<bool> PlayPause() => _smtc?.TryTogglePlayPauseAsync();
 
         public static IAsyncOperation<bool> Stop() => _smtc.TryStopAsync();
+        public static void VolumeDown() {
+            Keyboard.SendInput(new HarmonyPacket.KeyboardPacket() {
+                Key = Keys.VolumeDown,
+                wParam = 256
+            });
+            Keyboard.SendInput(new HarmonyPacket.KeyboardPacket() {
+                Key = Keys.VolumeDown,
+                wParam = 257
+            });
+        }
+
+        public static void VolumeUp() {
+            Keyboard.SendInput(new HarmonyPacket.KeyboardPacket() {
+                Key = Keys.VolumeUp,
+                wParam = 256
+            });
+            Keyboard.SendInput(new HarmonyPacket.KeyboardPacket() {
+                Key = Keys.VolumeUp,
+                wParam = 257
+            });
+        }
     }
 }

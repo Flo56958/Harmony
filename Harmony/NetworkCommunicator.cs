@@ -105,6 +105,12 @@ namespace Harmony {
                     case HarmonyPacket.PacketType.MousePacket:
                         break;
                     case HarmonyPacket.PacketType.KeyBoardPacket:
+                        if (OnSlave == 0) {
+                            Keyboard.SendInput(hp.Pack);
+                        }
+                        else {
+                            SendAsync(hp);
+                        }
                         break;
                     case HarmonyPacket.PacketType.DisplayPacket:
                         break;
@@ -234,7 +240,6 @@ namespace Harmony {
                 }
 
                 if (OnSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
-
                 var packet = HarmonyPacket.Encode(hp);
                 stream.Write(packet, 0, packet.Length);
                 stream.Flush();

@@ -83,10 +83,9 @@ namespace Harmony.Windows {
         }
 
         private static IntPtr SetHook(NativeMethods.HookProc proc) {
-            using (var curProcess = Process.GetCurrentProcess())
-            using (var curModule = curProcess.MainModule) {
-                return NativeMethods.SetWindowsHookEx(13, proc, NativeMethods.GetModuleHandle(curModule?.ModuleName), 0);
-            }
+            using var curProcess = Process.GetCurrentProcess();
+            using var curModule = curProcess.MainModule;
+            return NativeMethods.SetWindowsHookEx(13, proc, NativeMethods.GetModuleHandle(curModule?.ModuleName), 0);
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
@@ -94,7 +93,7 @@ namespace Harmony.Windows {
                 Type = HarmonyPacket.PacketType.KeyBoardPacket,
                 Pack = new HarmonyPacket.KeyboardPacket() {
                     wParam = wParam.ToInt32(),
-                    Key = (Keys)Marshal.ReadInt32(lParam),
+                    Key = (Keys)Marshal.ReadInt32(lParam)
                 }
             });
 

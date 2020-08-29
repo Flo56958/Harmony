@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro;
 using System.ComponentModel;
 using System.Windows;
+using ControlzEx.Theming;
 
 namespace Harmony.UI {
     public class HarmonyViewModel : INotifyPropertyChanged {
@@ -34,7 +35,7 @@ namespace Harmony.UI {
         public bool Darkmode {
             get => _darkmode; set {
                 _darkmode = value;
-                ThemeManager.ChangeTheme(Application.Current, ThemeManager.GetInverseTheme(ThemeManager.DetectTheme()));
+                ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme()));
                 RaisePropertyChanged("Darkmode");
             }
         }

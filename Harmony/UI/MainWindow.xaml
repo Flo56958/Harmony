@@ -85,8 +85,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <mah:ToggleSwitch Grid.Row="0" Content="Darkmode" IsChecked="{Binding Darkmode, Mode=TwoWay}"/>
-                        <mah:ToggleSwitch Grid.Row="1" Content="Debug Mode" IsChecked="{Binding DebugMode, Mode=TwoWay}"/>
+                        <mah:ToggleSwitch Grid.Row="0" Content="Darkmode" IsOn="{Binding Darkmode, Mode=TwoWay}"/>
+                        <mah:ToggleSwitch Grid.Row="1" Content="Debug Mode" IsOn="{Binding DebugMode, Mode=TwoWay}"/>
                     </Grid>
                 </Grid>
             </TabItem>
@@ -125,10 +125,21 @@
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="4*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBox Grid.Row="0" Name="Media_NowPlaying" TextWrapping="Wrap"/>
-                        <Button Grid.Row="1" Name="Media_Reload" Content="Reload" Margin="5px" FontSize="34" Click="Media_Reload_OnClick"/>
+                        <mah:MetroProgressBar Grid.Row="1" Name="Media_VolProgressBar"/>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Name="Media_VolDown" Content="🔉" Margin="5px" FontSize="34" Click="Media_VolDown_OnClick"/>
+                            <Button Grid.Column="1" Name="Media_VolUp" Content="🔊" Margin="5px" FontSize="34" Click="Media_VolUp_OnClick"/>
+                        </Grid>
+                        <Button Grid.Row="3" Name="Media_Reload" Content="Reload" Margin="5px" FontSize="34" Click="Media_Reload_OnClick"/>
                     </Grid>
                 </Grid>
             </TabItem>

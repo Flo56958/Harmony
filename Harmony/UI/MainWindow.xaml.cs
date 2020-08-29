@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using ControlzEx.Theming;
 using Harmony.UI;
 using Harmony.Windows;
 using MahApps.Metro;
@@ -68,8 +70,8 @@ namespace Harmony {
             foreach (var obj in DisplayCanvas.Children) {
                 if (!(obj is Canvas)) continue;
                 var c = (Canvas)obj;
-                if (!c.Background.Equals(ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent"))) continue;
-                if (int.TryParse(((TextBlock)c.Children[0]).Text, out int i)) {
+                if (!c.Background.Equals(new SolidColorBrush(Color.FromRgb(0, 100, 0)))) continue;
+                if (int.TryParse(((TextBlock)c.Children[0]).Text, out var i)) {
                     DisplayManager.Displays[i].Location = new System.Drawing.Point {
                         X = (int)((Canvas.GetLeft(c) + (main.Screen.Width / shrink) / 2) * shrink),
                         Y = (int)((Canvas.GetTop(c) + (main.Screen.Height / shrink) / 2) * shrink)
@@ -104,7 +106,7 @@ namespace Harmony {
                     Height = dis.Screen.Height / shrink,
                     MaxWidth = dis.Screen.Width / shrink,
                     MaxHeight = dis.Screen.Height / shrink,
-                    Background = (Brush)(dis.OwnDisplay ? ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent2") : ThemeManager.GetResourceFromAppStyle(this, "MahApps.Brushes.Accent")),
+                    Background = dis.OwnDisplay ? new SolidColorBrush(Color.FromRgb(0, 0, 150)) : new SolidColorBrush(Color.FromRgb(0, 100, 0)),
                     Opacity = 100
                 };
 
@@ -275,6 +277,51 @@ namespace Harmony {
                     Pack = new HarmonyPacket.MediaControlPacket()
                     {
                         Action = HarmonyPacket.MediaControlPacket.MediaAction.Reload
+                    }
+                });
+            }
+        }
+
+        //TODO: Add Mute Button
+
+        private void Media_VolDown_OnClick(object sender, RoutedEventArgs e) {
+            if (Model.IsServer) {
+                MediaControl.VolumeDown();
+            }
+            else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.KeyBoardPacket,
+                    Pack = new HarmonyPacket.KeyboardPacket() {
+                        Key = Keys.VolumeDown,
+                        wParam = 256
+                    }
+                });
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.KeyBoardPacket,
+                    Pack = new HarmonyPacket.KeyboardPacket() {
+                        Key = Keys.VolumeDown,
+                        wParam = 257
+                    }
+                });
+            }
+        }
+
+        private void Media_VolUp_OnClick(object sender, RoutedEventArgs e) {
+            if (Model.IsServer) {
+                MediaControl.VolumeUp();
+            } else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.KeyBoardPacket,
+                    Pack = new HarmonyPacket.KeyboardPacket() {
+                        Key = Keys.VolumeUp,
+                        wParam = 256
+                    }
+                });
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.KeyBoardPacket,
+                    Pack = new HarmonyPacket.KeyboardPacket() {
+                        Key = Keys.VolumeUp,
+                        wParam = 257
                     }
                 });
             }
