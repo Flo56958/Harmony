@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Windows.Media.Imaging;
 using Windows.Foundation;
-using Windows.Media;
 using Windows.Media.Control;
-using JetBrains.Annotations;
 using GlobalSystemMediaTransportControlsSessionManager = Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager;
 
 namespace Harmony.Windows {

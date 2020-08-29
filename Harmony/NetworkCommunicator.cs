@@ -10,7 +10,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Harmony {
     public static class NetworkCommunicator {
-        private static BlockingCollection<HarmonyPacket> _blockingCollection;
+        private static BlockingCollection<HarmonyPacket> _toSend;
+        private static BlockingCollection<HarmonyPacket> _toProcess;
 
         private static ConcurrentBag<Thread> _threads;
 
@@ -21,7 +22,8 @@ namespace Harmony {
         public static volatile byte[] _salt;
 
         public static void Init() {
-            _blockingCollection = new BlockingCollection<HarmonyPacket>();
+            _toSend = new BlockingCollection<HarmonyPacket>();
+            _toProcess = new BlockingCollection<HarmonyPacket>();
             _connections = new ConcurrentDictionary<EndPoint, TcpClient>();
             _threads = new ConcurrentBag<Thread>();
             var thread = MainWindow.Model.IsServer ? new Thread(ServerAccept) : new Thread(ClientConnect);
@@ -32,7 +34,7 @@ namespace Harmony {
 
 
         public static void SendAsync(HarmonyPacket p) {
-            _blockingCollection?.Add(p);
+            _toSend?.Add(p);
         }
 
         public static void Close() {
@@ -43,17 +45,22 @@ namespace Harmony {
             }
 
             if (_connections != null) {
-                foreach (var keyValuePair in _connections) {
-                    keyValuePair.Value.Close();
-                    keyValuePair.Value.Dispose();
+                foreach (var (_, value) in _connections) {
+                    value.Close();
+                    value.Dispose();
                 }
             }
 
-            _blockingCollection?.Dispose();
+            _toSend?.Dispose();
+            _toProcess?.Dispose();
         }
 
         private static void ServerAccept() {
             _salt = Crypto.Init(MainWindow.Password);
+            var serverReceive = new Thread(ServerProcessReceived);
+            serverReceive.Start();
+            _threads.Add(serverReceive);
+
             if (!int.TryParse(MainWindow.Model.Port, out var port)) return;
             var tcpIn = new TcpListener(IPAddress.Any, port);
             tcpIn.Start();
@@ -68,111 +75,169 @@ namespace Harmony {
                     continue;
                 }
 
-                var thread = new Thread(ServerClientHandler);
-                thread.Start(endpoint);
+                var send = new Thread(ServerClientHandler);
+                send.Start(endpoint);
+                _threads.Add(send);
 
                 connectedClients++;
+            }
+            tcpIn.Stop();
+        }
+
+        //This is the Method that handles the Client->Server Communication on the Server
+        private static void ServerReceive(object obj) {
+            if (!_connections.TryGetValue((EndPoint) obj, out var client)) return;
+            var stream = client.GetStream();
+
+            while (stream.CanRead) {
+                var hp = HarmonyPacket.ReadPacket(stream);
+                _toProcess.Add(hp);
+            }
+        }
+
+        private static void ServerProcessReceived() {
+            while (true) {
+                var hp = _toProcess.Take();
+
+                switch (hp.Type) {
+                    case HarmonyPacket.PacketType.MouseMovePacket:
+                        break;
+                    case HarmonyPacket.PacketType.MousePacket:
+                        break;
+                    case HarmonyPacket.PacketType.KeyBoardPacket:
+                        break;
+                    case HarmonyPacket.PacketType.DisplayPacket:
+                        break;
+                    case HarmonyPacket.PacketType.SaltPacket:
+                        break;
+                    case HarmonyPacket.PacketType.MediaControl:
+                        switch (((HarmonyPacket.MediaControlPacket) hp.Pack).Action) {
+                            case HarmonyPacket.MediaControlPacket.MediaAction.PlayPause:
+                                MediaControl.PlayPause();
+                                break;
+                            case HarmonyPacket.MediaControlPacket.MediaAction.Stop:
+                                MediaControl.Stop();
+                                break;
+                            case HarmonyPacket.MediaControlPacket.MediaAction.SkipPrevious:
+                                MediaControl.SkipPrevious();
+                                break;
+                            case HarmonyPacket.MediaControlPacket.MediaAction.SkipForward:
+                                MediaControl.SkipForward();
+                                break;
+                            case HarmonyPacket.MediaControlPacket.MediaAction.Reload:
+                                MediaControl.Reload();
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
         private static void ServerClientHandler(object obj) {
-            if (_connections.TryGetValue((EndPoint) obj, out var client)) {
-                MainWindow.Log($"Connected to {obj} as Server!", false);
-                var stream = client.GetStream();
+            if (!_connections.TryGetValue((EndPoint) obj, out var client)) return;
+            MainWindow.Log($"Connected to {obj} as Server!", false);
+            var stream = client.GetStream();
+            {
+                var saltPacket = HarmonyPacket.Encode(new HarmonyPacket()
                 {
-                    var saltPacket = HarmonyPacket.Encode(new HarmonyPacket()
+                    Type = HarmonyPacket.PacketType.SaltPacket,
+                    Pack = _salt
+                });
+
+                stream.Write(saltPacket, 0, saltPacket.Length);
+                stream.Flush();
+                MainWindow.Log("Send Salt-Packet!", false);
+            }
+
+            var keyMap = new Dictionary<Keys, bool>();
+            foreach (Keys key in Enum.GetValues(typeof(Keys))) {
+                keyMap[key] = false;
+            }
+
+            {
+                var displayPacket = HarmonyPacket.ReadPacket(stream);
+                if (displayPacket.Type != HarmonyPacket.PacketType.DisplayPacket) {
+                    MainWindow.Log(
+                        $"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket}; Actual: {displayPacket.Type}",
+                        true);
+                    client.Close();
+                    _ = _connections.TryRemove((EndPoint) obj, out _);
+                    return;
+                }
+
+                foreach (var d in ((HarmonyPacket.DisplayPacket) displayPacket.Pack).screens) {
+                    if (d.Screen.Location.X == 0 && d.Screen.Location.Y == 0) DisplayManager.SlaveMain = d;
+                    d.OwnDisplay = false;
+                    DisplayManager.AddRight(d);
+                }
+            }
+
+            {
+                var returnPacket = HarmonyPacket.Encode(new HarmonyPacket
+                {
+                    Type = HarmonyPacket.PacketType.DisplayPacket,
+                    Pack = new HarmonyPacket.DisplayPacket
                     {
-                        Type = HarmonyPacket.PacketType.SaltPacket,
-                        Pack = _salt
-                    });
-
-                    stream.Write(saltPacket, 0, saltPacket.Length);
-                    stream.Flush();
-                    MainWindow.Log("Send Salt-Packet!", false);
-                }
-
-                var keyMap = new Dictionary<Keys, bool>();
-                foreach (Keys key in Enum.GetValues(typeof(Keys))) {
-                    keyMap[key] = false;
-                }
-
-                {
-                    var displayPacket = HarmonyPacket.ReadPacket(stream);
-                    if (displayPacket.Type != HarmonyPacket.PacketType.DisplayPacket) {
-                        MainWindow.Log(
-                            $"Received unexpected Packet-Type! Expected: {HarmonyPacket.PacketType.SaltPacket}; Actual: {displayPacket.Type}",
-                            true);
-                        client.Close();
-                        _ = _connections.TryRemove((EndPoint) obj, out _);
-                        return;
+                        screens = DisplayManager.Displays
                     }
+                });
+                stream.Write(returnPacket, 0, returnPacket.Length);
+                stream.Flush();
+                MainWindow.Log($"Finished Handshake with Client {obj}!", false);
+            }
 
-                    foreach (var d in ((HarmonyPacket.DisplayPacket) displayPacket.Pack).screens) {
-                        if (d.Screen.Location.X == 0 && d.Screen.Location.Y == 0) DisplayManager.SlaveMain = d;
-                        d.OwnDisplay = false;
-                        DisplayManager.AddRight(d);
+            var receive = new Thread(ServerReceive);
+            receive.Start(obj);
+            _threads.Add(receive);
+
+            var mouseX = 0;
+            var mouseY = 0;
+            while (stream.CanWrite) {
+                var hp = _toSend.Take();
+                if (hp.Type == HarmonyPacket.PacketType.MouseMovePacket) {
+                    var mp = (HarmonyPacket.MouseMovePacket) hp.Pack;
+
+                    if (OnSlave == 0) {
+                        var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
+                        if (onScreen == null) continue;
+                        mouseX = mp.PosX;
+                        mouseY = mp.PosY;
+                        if (onScreen.OwnDisplay) {
+                            continue;
+                        }
+
+                        OnSlave = 1;
+                    }
+                    else {
+                        var pos = NativeMethods.GetCursorPosition();
+                        mouseX += mp.PosX - pos.X;
+                        mouseY += mp.PosY - pos.Y;
+                        var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
+                        if (onScreen == null) {
+                            mouseX -= mp.PosX - pos.X;
+                            mouseY -= mp.PosY - pos.Y;
+                            continue;
+                        }
+
+                        if (onScreen.OwnDisplay) {
+                            NativeMethods.SetCursorPos(mouseX, mouseY);
+                            OnSlave = 0;
+                        }
+
+                        mp.PosX = mouseX;
+                        mp.PosY = mouseY;
                     }
                 }
 
-                {
-                    var returnPacket = HarmonyPacket.Encode(new HarmonyPacket
-                    {
-                        Type = HarmonyPacket.PacketType.DisplayPacket,
-                        Pack = new HarmonyPacket.DisplayPacket
-                        {
-                            screens = DisplayManager.Displays
-                        }
-                    });
-                    stream.Write(returnPacket, 0, returnPacket.Length);
-                    stream.Flush();
-                    MainWindow.Log($"Finished Handshake with Client {obj}!", false);
-                }
+                if (OnSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
 
-                var mouseX = 0;
-                var mouseY = 0;
-                while (true) {
-                    var hp = _blockingCollection.Take();
-                    if (hp.Type == HarmonyPacket.PacketType.MouseMovePacket) {
-                        var mp = (HarmonyPacket.MouseMovePacket) hp.Pack;
-
-                        if (OnSlave == 0) {
-                            var onScreen = DisplayManager.GetDisplayFromPoint(mp.PosX, mp.PosY);
-                            if (onScreen == null) continue;
-                            mouseX = mp.PosX;
-                            mouseY = mp.PosY;
-                            if (onScreen.OwnDisplay) {
-                                continue;
-                            }
-
-                            OnSlave = 1;
-                        }
-                        else {
-                            var pos = NativeMethods.GetCursorPosition();
-                            mouseX += mp.PosX - pos.X;
-                            mouseY += mp.PosY - pos.Y;
-                            var onScreen = DisplayManager.GetDisplayFromPoint(mouseX, mouseY);
-                            if (onScreen == null) {
-                                mouseX -= mp.PosX - pos.X;
-                                mouseY -= mp.PosY - pos.Y;
-                                continue;
-                            }
-
-                            if (onScreen.OwnDisplay) {
-                                NativeMethods.SetCursorPos(mouseX, mouseY);
-                                OnSlave = 0;
-                            }
-
-                            mp.PosX = mouseX;
-                            mp.PosY = mouseY;
-                        }
-                    }
-
-                    if (OnSlave == 0 && hp.Type != HarmonyPacket.PacketType.DisplayPacket) continue;
-
-                    var packet = HarmonyPacket.Encode(hp);
-                    stream.Write(packet, 0, packet.Length);
-                    stream.Flush();
-                }
+                var packet = HarmonyPacket.Encode(hp);
+                stream.Write(packet, 0, packet.Length);
+                stream.Flush();
             }
         }
 
@@ -193,6 +258,11 @@ namespace Harmony {
             _salt = saltPacket.Pack;
             Crypto.Init(MainWindow.Password, _salt);
             MainWindow.Log("Successfully obtained Salt-Packet!", false);
+
+            if (!_connections.TryAdd(tcpClient.Client.RemoteEndPoint, tcpClient)) return;
+            var sendthread = new Thread(ClientSend);
+            _threads.Add(sendthread);
+            sendthread.Start(tcpClient.Client.RemoteEndPoint);
 
             {
                 var displayPacket = HarmonyPacket.Encode(new HarmonyPacket
@@ -247,6 +317,16 @@ namespace Harmony {
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+            }
+        }
+
+        private static void ClientSend(object obj) {
+            if (!_connections.TryGetValue((EndPoint) obj, out var client)) return;
+            var stream = client.GetStream();
+
+            while (stream.CanWrite) {
+                var hp = _toSend.Take();
+                stream.Write(HarmonyPacket.Encode(hp));
             }
         }
 

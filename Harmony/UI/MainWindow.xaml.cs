@@ -213,23 +213,71 @@ namespace Harmony {
         }
 
         private void Media_Stop_Click(object sender, RoutedEventArgs e) {
-            MediaControl.Stop();
+            if (Model.IsServer) {
+                MediaControl.Stop();
+            } else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.MediaControl,
+                    Pack = new HarmonyPacket.MediaControlPacket() {
+                        Action = HarmonyPacket.MediaControlPacket.MediaAction.Stop
+                    }
+                });
+            }
         }
 
         private void Media_PlayPause_Click(object sender, RoutedEventArgs e) {
-            MediaControl.PlayPause();
+            if (Model.IsServer) {
+                MediaControl.PlayPause();
+            } else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.MediaControl,
+                    Pack = new HarmonyPacket.MediaControlPacket() {
+                        Action = HarmonyPacket.MediaControlPacket.MediaAction.PlayPause
+                    }
+                });
+            }
         }
 
         private void Media_SkipPrevious_Click(object sender, RoutedEventArgs e) {
-            MediaControl.SkipPrevious();
+            if (Model.IsServer) {
+                MediaControl.SkipPrevious();
+            } else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.MediaControl,
+                    Pack = new HarmonyPacket.MediaControlPacket() {
+                        Action = HarmonyPacket.MediaControlPacket.MediaAction.SkipPrevious
+                    }
+                });
+            }
         }
 
         private void Media_SkipForward_Click(object sender, RoutedEventArgs e) {
-            MediaControl.SkipForward();
+            if (Model.IsServer) {
+                MediaControl.SkipForward();
+            } else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket() {
+                    Type = HarmonyPacket.PacketType.MediaControl,
+                    Pack = new HarmonyPacket.MediaControlPacket() {
+                        Action = HarmonyPacket.MediaControlPacket.MediaAction.SkipForward
+                    }
+                });
+            }
         }
 
         private void Media_Reload_OnClick(object sender, RoutedEventArgs e) {
-            MediaControl.Reload();
+            if (Model.IsServer) {
+                MediaControl.Reload();
+            }
+            else {
+                NetworkCommunicator.SendAsync(new HarmonyPacket()
+                {
+                    Type = HarmonyPacket.PacketType.MediaControl,
+                    Pack = new HarmonyPacket.MediaControlPacket()
+                    {
+                        Action = HarmonyPacket.MediaControlPacket.MediaAction.Reload
+                    }
+                });
+            }
         }
     }
 }

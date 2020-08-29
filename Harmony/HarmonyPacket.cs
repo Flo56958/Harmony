@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -17,7 +18,8 @@ namespace Harmony {
             MousePacket = 1,
             KeyBoardPacket = 2,
             DisplayPacket = 3,
-            SaltPacket = 4
+            SaltPacket = 4,
+            MediaControl = 5
         }
 
         public class MouseMovePacket {
@@ -38,6 +40,18 @@ namespace Harmony {
         public class KeyboardPacket {
             public Keys Key { get; set; }
             public int wParam { get; set; }
+        }
+
+        public class MediaControlPacket {
+            public enum MediaAction : byte {
+                PlayPause = 0,
+                Stop = 1,
+                SkipPrevious = 2,
+                SkipForward = 3,
+                Reload = 4
+            }
+
+            public MediaAction Action { get; set; }
         }
 
         internal static byte[] Encode(HarmonyPacket hp) {
@@ -78,6 +92,9 @@ namespace Harmony {
                 case PacketType.SaltPacket:
                     bytes.AddRange((byte[]) hp.Pack);
                     encrypt = false;
+                    break;
+                case PacketType.MediaControl:
+                    bytes.Add((byte) ((MediaControlPacket) hp.Pack).Action);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -127,6 +144,11 @@ namespace Harmony {
                     };
                 case PacketType.SaltPacket:
                     return input.Skip(1).ToArray();
+                case PacketType.MediaControl:
+                    return new MediaControlPacket()
+                    {
+                        Action = (MediaControlPacket.MediaAction) input[0]
+                    };
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
