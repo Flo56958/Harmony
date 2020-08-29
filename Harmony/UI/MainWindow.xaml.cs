@@ -12,7 +12,7 @@ using MahApps.Metro;
 namespace Harmony {
     public partial class MainWindow {
 
-        private static MainWindow _window;
+        public static MainWindow Window { get; private set; }
 
         public static HarmonyViewModel Model { get; private set; }
 
@@ -20,11 +20,13 @@ namespace Harmony {
 
         public MainWindow() {
             InitializeComponent();
-            _window = this;
+            Window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
             Model = (HarmonyViewModel)base.DataContext;
             VersionLabel.Content = "Harmony-Version: " + typeof(MainWindow).Assembly.GetName().Version;
+            MediaControl.Reload();
+            MediaControl.UpdateMediaProperties();
         }
 
         private void OnClickStart(object sender, RoutedEventArgs e) {
@@ -55,8 +57,8 @@ namespace Harmony {
 
         public static void Log(string message, bool error) {
             var err = error ? "[ERROR] " : "[INFO] ";
-            _window.Dispatcher?.Invoke(() => {
-                _window.DebugTextBox.AppendText(err + message + "\n");
+            Window.Dispatcher?.Invoke(() => {
+                Window.DebugTextBox.AppendText(err + message + "\n");
             });
         }
 
@@ -83,7 +85,7 @@ namespace Harmony {
         }
 
         public static void updateDisplayCanvas() {
-            _window.Dispatcher?.InvokeAsync(_window._updateDisplayCanvas);
+            Window.Dispatcher?.InvokeAsync(Window._updateDisplayCanvas);
         }
 
         private void _updateDisplayCanvas() {
@@ -208,6 +210,26 @@ namespace Harmony {
 
                     break;
             }
+        }
+
+        private void Media_Stop_Click(object sender, RoutedEventArgs e) {
+            MediaControl.Stop();
+        }
+
+        private void Media_PlayPause_Click(object sender, RoutedEventArgs e) {
+            MediaControl.PlayPause();
+        }
+
+        private void Media_SkipPrevious_Click(object sender, RoutedEventArgs e) {
+            MediaControl.SkipPrevious();
+        }
+
+        private void Media_SkipForward_Click(object sender, RoutedEventArgs e) {
+            MediaControl.SkipForward();
+        }
+
+        private void Media_Reload_OnClick(object sender, RoutedEventArgs e) {
+            MediaControl.Reload();
         }
     }
 }

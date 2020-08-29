@@ -90,6 +90,48 @@
                     </Grid>
                 </Grid>
             </TabItem>
+            <TabItem Header="Music">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Button Grid.Row="0" Margin="5px" FontSize="34" Content="Stop" Name="Media_Stop" Click="Media_Stop_Click"/>
+                        <Button Grid.Row="1" Margin="5px" FontSize="34" Content="▶⏸" Name="Media_PlayPause" Click="Media_PlayPause_Click"/>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Margin="5px" FontSize="34" Content="⏮" Name="Media_SkipPrevious" Click="Media_SkipPrevious_Click"/>
+                            <Button Grid.Column="1" Margin="5px" FontSize="34" Content="⏭" Name="Media_SkipForward" Click="Media_SkipForward_Click"/>
+                        </Grid>
+                    </Grid>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="10*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <mah:RevealImage Grid.Row="0" Name="Media_Thumbnail"/>
+                        <mah:MetroProgressBar Grid.Row="1" Name="Media_ProgressBar"/>
+                    </Grid>
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="4*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBox Grid.Row="0" Name="Media_NowPlaying" TextWrapping="Wrap"/>
+                        <Button Grid.Row="1" Name="Media_Reload" Content="Reload" Margin="5px" FontSize="34" Click="Media_Reload_OnClick"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
             <TabItem Header="About">
                 <Grid>
                     <Grid.RowDefinitions>
