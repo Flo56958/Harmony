@@ -83,10 +83,12 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <mah:ToggleSwitch Grid.Row="0" Content="Darkmode" IsOn="{Binding Darkmode, Mode=TwoWay}"/>
                         <mah:ToggleSwitch Grid.Row="1" Content="Debug Mode" IsOn="{Binding DebugMode, Mode=TwoWay}"/>
+                        <mah:ToggleSwitch Grid.Row="2" Content="Close on Minimize" IsOn="{Binding CloseOnMinimize, Mode=TwoWay}"/>
                     </Grid>
                 </Grid>
             </TabItem>

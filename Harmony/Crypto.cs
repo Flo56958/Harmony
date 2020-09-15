@@ -13,7 +13,7 @@ namespace Harmony {
         private static byte[] _derivedPass;
 
         internal static byte[] Init(SecureString passPhrase, byte[] salt = null) {
-            if (salt == null) salt = Generate128BitsOfRandomEntropy();
+            salt ??= Generate128BitsOfRandomEntropy();
             _derivedPass = new Rfc2898DeriveBytes(new System.Net.NetworkCredential(string.Empty, passPhrase).Password, salt, DerivationIterations).GetBytes(Keysize / 8);
             return salt;
         }
@@ -21,21 +21,17 @@ namespace Harmony {
         internal static byte[] Encrypt(byte[] bytes) {
             var iv = Generate128BitsOfRandomEntropy();
 
-            using (var rijndaelManaged = new RijndaelManaged()) {
-                rijndaelManaged.Padding = PaddingMode.PKCS7;
-                rijndaelManaged.Mode = CipherMode.CBC;
-                rijndaelManaged.BlockSize = 128;
+            using var rijndaelManaged = new RijndaelManaged();
+            rijndaelManaged.Padding = PaddingMode.PKCS7;
+            rijndaelManaged.Mode = CipherMode.CBC;
+            rijndaelManaged.BlockSize = 128;
 
-                using (var encryptor = rijndaelManaged.CreateEncryptor(_derivedPass, iv)) {
-                    using (var ms = new MemoryStream()) {
-                        using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {
-                            cs.Write(bytes, 0, bytes.Length);
-                            cs.FlushFinalBlock();
-                            return iv.Concat(ms.ToArray()).ToArray();
-                        }
-                    }
-                }
-            }
+            using var encryptor = rijndaelManaged.CreateEncryptor(_derivedPass, iv);
+            using var ms = new MemoryStream();
+            using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
+            cs.Write(bytes, 0, bytes.Length);
+            cs.FlushFinalBlock();
+            return iv.Concat(ms.ToArray()).ToArray();
         }
 
         internal static byte[] Decrypt(byte[] bytes) {

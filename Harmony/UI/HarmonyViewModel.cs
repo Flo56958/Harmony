@@ -61,12 +61,23 @@ namespace Harmony.UI {
             }
         }
 
+        public bool CloseOnMinimize
+        {
+            get => _closeOnMinimize;
+            set
+            {
+                _closeOnMinimize = value;
+                RaisePropertyChanged("CloseOnMinimize");
+            }
+        }
+
         private string _ipAddress = "localhost";
         private string _port = "56958";
         private bool _darkmode;
         private bool _notStarted = true;
         private bool _isServer;
         private bool _debugmode = true;
+        private bool _closeOnMinimize;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

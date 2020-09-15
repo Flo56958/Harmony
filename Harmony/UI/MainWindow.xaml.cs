@@ -25,7 +25,7 @@ namespace Harmony {
             Window = this;
             Log($"The IP-Address of this machine is { NetworkCommunicator.GetLocalIPAddress() }", false);
             DisplayManager.SetUp();
-            Model = (HarmonyViewModel)base.DataContext;
+            Model = (HarmonyViewModel) DataContext;
             VersionLabel.Content = "Harmony-Version: " + typeof(MainWindow).Assembly.GetName().Version;
             MediaControl.Reload();
             MediaControl.UpdateMediaProperties();
@@ -202,15 +202,16 @@ namespace Harmony {
         }
 
         private void MetroWindow_StateChanged(object sender, EventArgs e) {
-            switch (this.WindowState) {
+            switch (WindowState) {
                 case WindowState.Maximized:
                     break;
                 case WindowState.Minimized:
-                    this.Hide();
+                    if (Model.CloseOnMinimize) Hide();
                     break;
                 case WindowState.Normal:
-
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

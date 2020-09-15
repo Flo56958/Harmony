@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
 
 namespace Harmony {
@@ -52,6 +53,15 @@ namespace Harmony {
             }
 
             public MediaAction Action { get; set; }
+        }
+
+        public class MediaDataPacket
+        {
+            public int TrackNumber { get; set; }
+            public string Artist { get; set; }
+            public string Title { get; set; }
+            public string Album { get; set; }
+            public BitmapImage Thumbnail { get; set; }
         }
 
         internal static byte[] Encode(HarmonyPacket hp) {

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
@@ -19,6 +20,17 @@ namespace Harmony {
                 MainWindow.Visibility = Visibility.Visible;
                 MainWindow.WindowState = WindowState.Normal;
             };
+
+            nIcon.ContextMenuStrip = new ContextMenuStrip();
+
+            var button = new ToolStripButton("Close", null, onCloseButtonClick);
+            nIcon.ContextMenuStrip.Items.Add(button);
+        }
+
+        private void onCloseButtonClick(object? sender, EventArgs e)
+        {
+            nIcon.Dispose();
+            Environment.Exit(0);
         }
 
         protected override void OnExit(ExitEventArgs e) {
